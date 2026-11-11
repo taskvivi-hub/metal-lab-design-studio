@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en" class="no-zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Metal Lab · Design Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#E4F4F0; --tile:#CFE8E2; --paper:#FFFFFF; --paper-2:#F3FAF8;
+  --ink:#17414A; --ink-soft:#4E6E74; --line:#B9DCD4; --line-strong:#17414A;
+  --tape:#FFC93C; --tape-ink:#3B2A05; --coral:#FF6F61; --mint:#2EC4A6;
+  --good:#1E9E72; --good-bg:#DDF5EA; --bad:#D9483F; --bad-bg:#FDE3E0;
+  --copper:#C8693F; --alu:#AEBBC7; --steel:#5E6B7A;
+  --scene-wall:#D7EFEA; --scene-tile:#C3E3DC; --scene-sky:#BFE7FF; --scene-frame:#FFFFFF;
+  --scene-wood:#E9B97A; --scene-bench:#3E7C86; --scene-bench-top:#9ED8CF; --scene-sign:#17414A;
+  --bubble:#FFFFFF; --shadow:#17414A;
+  --font-display:'Fredoka','PingFang TC','Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible','PingFang TC','Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --wall:#0E2A2F; --tile:#143840; --paper:#173B42; --paper-2:#12333A;
+    --ink:#E6F7F3; --ink-soft:#9DC4C0; --line:#2B5A62; --line-strong:#8FD3C6;
+    --good:#5FD9A8; --good-bg:#16463A; --bad:#FF8A80; --bad-bg:#4A2522;
+    --scene-wall:#163C44; --scene-tile:#1C4851; --scene-sky:#27476B; --scene-frame:#2B5A62;
+    --scene-wood:#9A6C3C; --scene-bench:#245760; --scene-bench-top:#3E8C83; --scene-sign:#0B2226;
+    --bubble:#21484F; --shadow:#071A1D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --wall:#0E2A2F; --tile:#143840; --paper:#173B42; --paper-2:#12333A;
+  --ink:#E6F7F3; --ink-soft:#9DC4C0; --line:#2B5A62; --line-strong:#8FD3C6;
+  --good:#5FD9A8; --good-bg:#16463A; --bad:#FF8A80; --bad-bg:#4A2522;
+  --scene-wall:#163C44; --scene-tile:#1C4851; --scene-sky:#27476B; --scene-frame:#2B5A62;
+  --scene-wood:#9A6C3C; --scene-bench:#245760; --scene-bench-top:#3E8C83; --scene-sign:#0B2226;
+  --bubble:#21484F; --shadow:#071A1D;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; min-height:100%;
+  background-color:var(--wall);
+  background-image:linear-gradient(var(--tile) 1px,transparent 1px),linear-gradient(90deg,var(--tile) 1px,transparent 1px);
+  background-size:34px 34px;
+  color:var(--ink); font-family:var(--font-body); font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+img,svg{max-width:100%}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0}
+p{margin:0 0 .8em}
+.zh{color:var(--ink-soft);font-size:.86em;font-weight:400}
+html.no-zh .zh{display:none!important}
+:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.zh-fab{position:fixed;right:calc(8px + env(safe-area-inset-right,0px));top:42%;z-index:30;border:2px solid var(--line-strong);background:var(--paper);color:var(--ink);font-family:var(--font-body);font-weight:700;font-size:14px;line-height:1.2;padding:8px 10px;border-radius:12px;box-shadow:0 3px 0 var(--shadow);white-space:nowrap;opacity:.85}
+.zh-fab:hover{opacity:1}
+.zh-fab[aria-pressed="true"]{background:var(--tape);color:var(--tape-ink);opacity:1}
+@media (max-width:640px){.zh-fab{font-size:12px;padding:6px 8px;right:calc(4px + env(safe-area-inset-right,0px))}}
+
+/* ---------- top bar ---------- */
+.app{max-width:1080px;margin:0 auto;padding:14px 16px 190px}
+.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand svg{width:38px;height:38px;flex:none}
+.brand small{display:block;font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--ink-soft);letter-spacing:0}
+.map{display:flex;align-items:center;gap:0;margin:0 auto;padding:0;list-style:none}
+.map li{display:flex;align-items:center}
+.map .stop{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink-soft);min-width:52px}
+.map .dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--paper);border:2px solid var(--line);font-size:15px}
+.map .bar{width:22px;height:3px;background:var(--line);border-radius:2px;margin-bottom:16px}
+.map .done .dot{background:var(--mint);border-color:var(--mint)}
+.map .done + .bar,.map li.done .bar{background:var(--mint)}
+.map .now .dot{background:var(--tape);border-color:var(--line-strong);transform:scale(1.12)}
+.map .now{color:var(--ink);font-weight:700}
+.tools{display:flex;gap:8px}
+.tool{border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.tool[aria-pressed="false"]{opacity:.6}
+
+/* ---------- shared pieces ---------- */
+.panel{background:var(--paper);border:2px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 5px 0 var(--line);margin-bottom:20px}
+.tape{display:inline-block;background:var(--tape);color:var(--tape-ink);font-family:var(--font-display);font-weight:600;font-size:15px;padding:4px 14px 5px;border-radius:4px;transform:rotate(-1.6deg);margin-bottom:10px;box-shadow:0 2px 0 #0000001a}
+.title-xl{font-size:clamp(30px,5.4vw,50px);font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+.title-l{font-size:clamp(23px,3.6vw,32px);margin-bottom:6px}
+.lead{font-size:clamp(16px,2.2vw,19px);color:var(--ink-soft);max-width:62ch}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--line-strong);background:var(--tape);color:var(--tape-ink);font-family:var(--font-display);font-weight:600;font-size:18px;padding:11px 22px;border-radius:16px;box-shadow:0 4px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shadow)}
+.btn.alt{background:var(--paper);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:0 4px 0 var(--shadow)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.mt{margin-top:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.speak{border:0;background:transparent;font-size:16px;padding:2px 4px;border-radius:6px;line-height:1}
+.speak:hover{background:var(--paper-2)}
+.no-tts .speak{display:none}
+
+/* option buttons */
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.opts.two{grid-template-columns:repeat(2,1fr)}
+.opt{position:relative;border:2px solid var(--line);background:var(--paper);border-radius:18px;padding:14px 12px;text-align:center;font-weight:700;font-size:17px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:border-color .12s,background .12s}
+.opt:hover:not(:disabled){border-color:var(--mint)}
+.opt svg{width:58px;height:58px}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);animation:shake .35s}
+.opt.gone{opacity:.32;text-decoration:line-through}
+.opt:disabled{cursor:default}
+.opt.right:disabled{opacity:1}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.feedback{border-radius:16px;padding:14px 16px;margin-top:16px;border:2px solid var(--good);background:var(--good-bg)}
+.feedback.bad{border-color:var(--bad);background:var(--bad-bg)}
+.qcount{font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+
+/* ---------- title scene ---------- */
+.scene-wrap{border:2px solid var(--line);border-radius:28px;overflow:hidden;background:var(--scene-wall);box-shadow:0 6px 0 var(--line)}
+.scene-wrap svg{display:block;width:100%;height:auto}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+.level-tile{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:16px}
+.level-tile b{font-family:var(--font-display);font-weight:600;font-size:19px;display:block}
+.level-tile .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--mint);color:#08302A;font-weight:700;font-size:14px;margin-bottom:6px}
+.bub{animation:rise 3.2s ease-in infinite}
+.bub:nth-of-type(2){animation-delay:1s}.bub:nth-of-type(3){animation-delay:2s}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-46px);opacity:0}}
+
+/* ---------- team builder ---------- */
+.pick{border:2px solid var(--line);background:var(--paper);border-radius:22px;padding:12px 12px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;transition:border-color .12s,transform .12s}
+.pick:hover{border-color:var(--mint)}
+.pick.sel{border-color:var(--line-strong);background:var(--paper-2);box-shadow:0 4px 0 var(--line-strong)}
+.pick .av{width:100%;max-width:120px;aspect-ratio:120/140;border-radius:18px;background:var(--scene-wall)}
+.pick .av.h{aspect-ratio:1}
+.pick b{font-family:var(--font-display);font-weight:600;font-size:18px}
+.pick .traits{font-size:13px;color:var(--ink-soft)}
+.chiprow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.chip{font-size:12px;font-weight:700;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.name-in{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:10px 14px;font-size:18px;width:min(320px,100%)}
+.spark-card{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;background:var(--paper-2);border:2px dashed var(--line-strong);border-radius:24px;padding:16px 20px}
+.spark-card svg.duo{width:110px;height:auto}
+.spark-mid{text-align:center}
+.spark-mid .team{font-family:var(--font-display);font-weight:700;font-size:clamp(22px,3.4vw,30px)}
+.spark-mid .badge{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:3px 12px;margin-bottom:6px}
+.spark-mid .badge.good{background:var(--mint);color:#08302A}
+
+/* ---------- level 1 ---------- */
+.sample{border:2px solid var(--line);background:var(--paper);border-radius:22px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.sample svg{width:96px;height:96px}
+.sample b{font-family:var(--font-display);font-weight:600;font-size:20px}
+.sample.sel{border-color:var(--line-strong);box-shadow:0 4px 0 var(--line-strong)}
+.sample .tick{position:absolute;top:10px;right:12px;width:24px;height:24px;border-radius:50%;background:var(--mint);color:#08302A;font-size:14px;display:grid;place-items:center;font-weight:700}
+.info{display:grid;grid-template-columns:150px 1fr;gap:20px;align-items:start}
+.info svg{width:150px;height:150px}
+.uses{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 10px}
+.use{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:6px 12px;font-weight:700;font-size:15px}
+.fact{border-left:5px solid var(--tape);background:var(--paper-2);padding:10px 14px;border-radius:4px 14px 14px 4px;font-size:15px}
+.prompt{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin-bottom:18px}
+.prompt .vis{width:110px;height:110px;border-radius:22px;background:var(--scene-wall);display:grid;place-items:center;font-size:62px}
+.prompt .vis svg{width:96px;height:96px}
+.prompt .q{font-family:var(--font-display);font-weight:500;font-size:clamp(20px,3vw,26px);line-height:1.3}
+
+/* ---------- level 2 ---------- */
+.rig{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:var(--scene-wall);border-radius:20px;padding:14px;border:2px solid var(--line)}
+.slot{background:var(--paper);border-radius:16px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:200px;justify-content:space-between}
+.slot svg.res{width:100%;max-width:130px;height:96px}
+.slot .val{font-weight:700;font-size:15px}
+.slot .mini{width:44px;height:44px}
+.slot .btn{font-size:15px;padding:7px 14px}
+.report{margin-top:18px}
+.report-line{font-family:var(--font-display);font-size:clamp(20px,3vw,26px);font-weight:500;margin:6px 0 14px}
+.blank{display:inline-block;min-width:110px;border-bottom:3px solid var(--ink);text-align:center;color:var(--coral);font-weight:600;padding:0 6px}
+.form-q{font-size:15px;color:var(--ink-soft);margin-bottom:8px}
+.form-q b{color:var(--ink);font-size:17px}
+.shelf{display:flex;gap:8px;flex-wrap:wrap}
+.adj{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 8px 5px 12px;font-weight:700;font-size:15px}
+.adj .m{width:12px;height:12px;border-radius:50%}
+.adj.locked{opacity:.4;border-style:dashed}
+.adj.on{background:var(--tape);border-color:var(--line-strong);color:var(--tape-ink)}
+.adj.on .zh{color:var(--tape-ink)}
+
+/* ---------- level 3 ---------- */
+.ticket{border:2px solid var(--line);background:var(--paper);border-radius:20px;padding:14px;text-align:left;display:flex;gap:12px;align-items:center;position:relative}
+.ticket .cl{font-size:34px;width:54px;height:54px;border-radius:50%;background:var(--scene-wall);display:grid;place-items:center;flex:none}
+.ticket b{font-family:var(--font-display);font-weight:600;font-size:17px;display:block}
+.ticket small{color:var(--ink-soft);font-size:13px}
+.ticket.sel{border-color:var(--line-strong);box-shadow:0 4px 0 var(--line-strong)}
+.stamp{position:absolute;top:-10px;right:-6px;background:var(--good);color:#fff;font-family:var(--font-display);font-weight:600;font-size:13px;padding:3px 10px;border-radius:8px;transform:rotate(6deg)}
+.brief{font-family:var(--font-display);font-weight:500;font-size:clamp(18px,2.6vw,22px);background:var(--paper-2);border-radius:18px;padding:14px 18px;position:relative;margin:4px 0 14px}
+.need{font-size:15px;color:var(--ink-soft);margin-bottom:16px}
+.studio{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start}
+.preview{background:var(--scene-wall);border:2px solid var(--line);border-radius:24px;padding:16px;text-align:center;position:sticky;top:12px}
+.preview svg{width:100%;max-width:330px;height:auto}
+.preview .pname{font-family:var(--font-display);font-weight:700;font-size:26px;min-height:1.2em}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:46px;height:46px;border-radius:50%;border:3px solid var(--paper);box-shadow:0 0 0 2px var(--line);position:relative}
+.sw.sel{box-shadow:0 0 0 3px var(--line-strong)}
+.sw span{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap}
+.pats{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.pat{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:6px;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.pat svg{width:100%;height:38px;border-radius:8px}
+.pat.sel{border-color:var(--line-strong);box-shadow:0 3px 0 var(--line-strong)}
+.pat .star{position:absolute;top:-8px;right:-4px;background:var(--coral);color:#fff;font-size:10px;padding:1px 6px;border-radius:999px}
+.field-label{font-family:var(--font-display);font-weight:600;font-size:18px;margin:18px 0 8px;display:block}
+.field-label:first-child{margin-top:0}
+
+/* sentence scaffold */
+.bank{display:flex;gap:8px;flex-wrap:wrap;background:var(--paper-2);border:2px dashed var(--line);border-radius:18px;padding:12px}
+.bank .k{font-size:12px;color:var(--ink-soft);display:block}
+.bank .item{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:5px 10px;font-weight:700;font-size:15px}
+.frames{margin:0;padding:0;list-style:none;counter-reset:f}
+.frames li{counter-increment:f;display:grid;grid-template-columns:36px 1fr;gap:10px;padding:14px 0;border-bottom:2px dashed var(--line);font-size:18px;line-height:2.3}
+.frames li:last-child{border-bottom:0}
+.frames li::before{content:counter(f);width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:15px;line-height:1;margin-top:6px}
+.slotin{border:0;border-bottom:3px solid var(--ink-soft);background:var(--paper-2);border-radius:8px 8px 0 0;padding:2px 8px;font-size:17px;font-weight:700;min-width:7ch;max-width:100%}
+.slotin.ok{border-bottom-color:var(--good);background:var(--good-bg)}
+.slotin.no{border-bottom-color:var(--bad);background:var(--bad-bg)}
+.slotin::placeholder{color:var(--ink-soft);font-weight:400;opacity:.8}
+
+/* final card */
+.final{background:var(--paper);border:3px solid var(--line-strong);border-radius:28px;overflow:hidden;box-shadow:0 7px 0 var(--line-strong)}
+.final-head{background:var(--ink);color:var(--paper);padding:16px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.final-head .duo{display:flex}
+.final-head .duo svg{width:62px;height:62px;background:var(--paper);border-radius:50%;border:3px solid var(--tape)}
+.final-head .duo svg + svg{margin-left:-14px}
+.final-head h2{font-size:24px}
+.final-head small{opacity:.8;font-size:13px;display:block}
+.final-body{display:grid;grid-template-columns:300px 1fr;gap:22px;padding:22px}
+.final-body .pv{align-self:start;background:var(--scene-wall);border-radius:20px;padding:10px;text-align:center}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;margin-bottom:14px}
+.facts dt{color:var(--ink-soft)}
+.facts dd{margin:0;font-weight:700}
+.pitch{margin:0;padding-left:24px}
+.pitch li{margin-bottom:9px;font-size:17px}
+.pitch li em{font-style:normal;font-weight:700;background:linear-gradient(transparent 62%,#FFC93C88 0)}
+.copy-note{font-size:14px;color:var(--ink-soft);border-top:2px dashed var(--line);margin-top:14px;padding-top:12px}
+
+/* modal */
+.modal{position:fixed;inset:0;background:#0009;display:grid;place-items:center;z-index:50;padding:20px}
+.modal .box{background:var(--paper);border-radius:22px;padding:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;text-align:center}
+.modal img{width:100%;max-height:62vh;object-fit:contain;border-radius:12px;border:2px solid var(--line)}
+
+/* ---------- dialogue dock ---------- */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:0 12px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.dock-in{max-width:1080px;margin:0 auto;background:var(--paper);border:2px solid var(--line-strong);border-radius:24px;box-shadow:0 -2px 0 var(--line),0 10px 30px #0003;padding:10px 14px;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center;pointer-events:auto}
+.who{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:center}
+.who svg{width:62px;height:62px;background:var(--scene-wall);border-radius:50%}
+.say{background:var(--paper-2);border:2px solid var(--line);border-radius:16px;padding:7px 11px;font-size:15px;line-height:1.35;position:relative;min-height:46px}
+.say b{display:block;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--ink-soft)}
+.say::before{content:"";position:absolute;left:-9px;top:16px;border:8px solid transparent;border-right-color:var(--line);border-left:0}
+.say.pop{animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:none}}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:150px}
+.meter{width:150px}
+.meter .lbl{font-size:12px;font-weight:700;display:flex;justify-content:space-between}
+.meter .trk{height:12px;border-radius:999px;background:var(--paper-2);border:2px solid var(--line);overflow:hidden}
+.meter .fill{height:100%;width:0;background:linear-gradient(90deg,var(--tape),var(--coral));transition:width .5s}
+.hintbtn{font-size:13px;padding:6px 12px;border-radius:12px;box-shadow:0 3px 0 var(--shadow)}
+.hidden{display:none!important}
+.burst{position:fixed;pointer-events:none;z-index:60;font-size:22px;animation:fly .9s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(160deg);opacity:0}}
+
+@media (max-width:820px){
+  .studio,.final-body{grid-template-columns:1fr}
+  .preview{position:static}
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .map .stop span.l{display:none}
+  .map .stop{min-width:34px}
+  .map .bar{width:12px;margin-bottom:0}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .app{padding:10px 12px 200px}
+  .panel{padding:16px;border-radius:20px}
+  .grid3,.levels,.opts{grid-template-columns:1fr}
+  .opts.two{grid-template-columns:1fr 1fr}
+  .opt{flex-direction:row;justify-content:flex-start;text-align:left;padding:10px 12px}
+  .opt svg{width:44px;height:44px}
+  .rig{grid-template-columns:repeat(3,1fr);padding:8px;gap:6px}
+  .slot{padding:6px;min-height:170px}
+  .slot .btn{font-size:13px;padding:6px 8px}
+  .info{grid-template-columns:1fr}
+  .info svg{width:110px;height:110px}
+  .prompt .vis{width:80px;height:80px;font-size:44px}
+  .prompt .vis svg{width:70px;height:70px}
+  .spark-card{grid-template-columns:1fr 1fr;}
+  .spark-mid{grid-column:1/-1;order:-1}
+  .spark-card svg.duo{width:80px;margin:0 auto}
+  .dock-in{grid-template-columns:1fr 1fr;padding:8px 10px;gap:8px;border-radius:20px}
+  .who{grid-template-columns:40px 1fr;gap:5px}
+  .who svg{width:40px;height:40px}
+  .say{font-size:12.5px;padding:5px 8px;min-height:40px}
+  .say b{font-size:11px}
+  .side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;min-width:0}
+  .meter{width:auto;flex:1}
+  .frames li{font-size:16px;grid-template-columns:30px 1fr}
+  .final-head h2{font-size:20px}
+  .tools .tool{padding:5px 9px;font-size:12px}
+}
+.steps3{display:flex;align-items:center;gap:0;margin-bottom:10px}
+.steps3 span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;border:2px solid var(--line);background:var(--paper)}
+.steps3 span.now{background:var(--tape);border-color:var(--line-strong);color:var(--tape-ink)}
+.steps3 span.done{background:var(--mint);border-color:var(--mint);color:#08302A}
+.steps3 i{width:22px;height:3px;background:var(--line)}
+.spark3{text-align:center;background:var(--paper-2);border:2px dashed var(--line-strong);border-radius:22px;padding:16px}
+.spark3 .badge{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:3px 12px;margin-bottom:6px}
+.spark3 .badge.good{background:var(--mint);color:#08302A}
+.spark3 .team{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,5vw,34px);line-height:1.15}
+.spark3 .sline{margin:6px 0 12px}
+.duo3{display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:left}
+.who3{display:flex;flex-direction:column;align-items:center;gap:8px}
+.who3 svg{width:96px;height:96px;background:var(--scene-wall);border-radius:50%}
+.bub3{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;font-size:15px;line-height:1.35}
+.bub3 b{display:block;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--ink-soft)}
+.spark3 .bonus{font-weight:700;font-size:14px;margin:12px 0 0}
+@media (max-width:640px){
+  .team-panel{padding:14px}
+  .team-panel .title-l{font-size:22px}
+  .team-panel .lead{font-size:14.5px;margin-bottom:8px}
+  .team-panel .tape{margin-bottom:6px}
+  .team-panel .name-in{padding:8px 12px;font-size:16px;width:100%}
+  .team-grid{gap:8px}
+  .team-grid .pick{padding:8px 6px 10px;gap:2px}
+  .team-grid .pick .av{max-width:72px}
+  .team-grid .pick b{font-size:15px}
+  .team-grid .pick .motto{display:none}
+  .team-grid .pick .traits{font-size:12px;line-height:1.3}
+  .team-grid .chip{font-size:11px;padding:1px 7px}
+  .team-nav{margin-top:12px}
+  .team-nav .btn{font-size:16px;padding:9px 16px}
+  .who3 svg{width:76px;height:76px}
+  .bub3{font-size:13.5px}
+  .topbar{margin-bottom:10px;gap:8px;flex-wrap:wrap;row-gap:6px}
+  .brand{order:1;font-size:17px;gap:8px}
+  .brand small{display:none}
+  .brand svg{width:30px;height:30px}
+  .tools{order:2;margin-left:auto}
+  .map{order:3;width:100%;justify-content:center}
+  .map .dot{width:26px;height:26px;font-size:13px}
+}
+@media (max-width:640px) and (max-height:740px){
+  .team-grid .pick .av{max-width:54px}
+  .team-panel .lead{font-size:13.5px;line-height:1.35}
+  .team-panel .title-l{font-size:20px}
+  .steps3{margin-bottom:6px}
+  .who3 svg{width:64px;height:64px}
+  .spark3{padding:12px}
+  .spark3 .sline{margin:4px 0 8px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="11" fill="#17414A"/><path d="M16 9h8M17.5 9v8l-6.5 11a3 3 0 0 0 2.6 4.5h12.8A3 3 0 0 0 29 28l-6.5-11V9" fill="none" stroke="#FFC93C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 25h13l2 3.6a2 2 0 0 1-1.8 2.9H13.3a2 2 0 0 1-1.8-2.9z" fill="#2EC4A6"/></svg>
+      <div>Metal Lab<small>Design Studio</small></div>
+    </div>
+    <ol class="map" id="map" aria-label="Your progress"></ol>
+    <div class="tools">
+      <button class="tool" id="sndBtn" aria-pressed="true">🔊 Sound</button>
+      <button class="tool" id="resetBtn">↺ Restart</button>
+    </div>
+  </header>
+  <main id="stage" aria-live="polite"></main>
+</div>
+
+<button class="zh-fab" id="zhBtn" type="button" aria-pressed="false" title="Show / hide Chinese hints">中文</button>
+<div class="dock hidden" id="dock">
+  <div class="dock-in">
+    <div class="who"><span id="dAv"></span><div class="say" id="dSay"><b id="dName"></b><span id="dTxt"></span></div></div>
+    <div class="who"><span id="hAv"></span><div class="say" id="hSay"><b id="hName"></b><span id="hTxt"></span></div></div>
+    <div class="side">
+      <div class="meter" title="Team spark"><div class="lbl"><span>✦ Team spark</span><span id="sparkNum">0</span></div><div class="trk"><div class="fill" id="sparkFill"></div></div></div>
+      <button class="btn alt hintbtn hidden" id="hintBtn"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const stage=$('#stage');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pick=a=>Array.isArray(a)?a[Math.floor(Math.random()*a.length)]:a;
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+const norm=s=>String(s||'').toLowerCase().replace(/[.,!?;:"“”’']/g,' ').replace(/\s+/g,' ').trim();
+
+/* ================= DATA ================= */
+const METALS={
+  copper:{name:'Copper',zh:'銅',sym:'Cu',faces:['#F6BE96','#CF7444','#9E4A28'],dot:'#C8693F',
+    look:'reddish-brown and shiny',lookZh:'紅棕色、亮亮的',
+    uses:[['🔌','electric wires','電線'],['🌀','motor coils','馬達線圈'],['🚰','water pipes','水管']],
+    fact:'The Statue of Liberty is covered in copper. It turned green over many years!',factZh:'自由女神像外層是銅，時間久了變成綠色！'},
+  aluminum:{name:'Aluminum',zh:'鋁',sym:'Al',faces:['#F7FAFC','#C9D3DC','#97A6B4'],dot:'#AEBBC7',
+    look:'silver-white and very light',lookZh:'銀白色、很輕',
+    uses:[['🥫','soda cans','鋁罐'],['✈️','airplanes','飛機'],['💻','laptop cases','筆電外殼']],
+    fact:'Aluminum is the most common metal in the Earth’s crust.',factZh:'鋁是地殼中含量最多的金屬。'},
+  steel:{name:'Steel',zh:'鋼',sym:'Fe+C',faces:['#B3BDC8','#707D8C','#4A5563'],dot:'#5E6B7A',
+    look:'gray, hard and heavy',lookZh:'灰色、硬、重',
+    uses:[['🌉','bridges','橋樑'],['🏢','tall buildings','高樓'],['🔧','tools and nails','工具和釘子']],
+    fact:'Steel is not an element. It is mostly iron, with a little carbon.',factZh:'鋼不是元素，它主要是鐵，加上一點點碳。'}
+};
+const MK=['copper','aluminum','steel'];
+
+const DESIGNERS=[
+  {id:'inventor',title:'The Inventor',zh:'發明家',traits:['curious','creative'],traitsZh:'好奇、有創意',hair:'#3A2B52',skin:'#FFD9C2',accent:'#FF6F61',teamWord:'Wild Idea',special:'lightning',best:'gizmo',
+   motto:'“What if we try something new?”',
+   lines:{hello:['Let’s invent something nobody has seen before!'],correct:['Yes! My idea worked!','Ooh, I knew it!','Another discovery!'],wrong:['Hmm, a failed experiment. Let’s try again!','Every mistake is useful data!'],done:['Level complete! What should we invent next?'],think:['Let me think… what’s the clue here?']}},
+  {id:'engineer',title:'The Engineer',zh:'工程師',traits:['precise','logical'],traitsZh:'精準、有邏輯',hair:'#1E3A5F',skin:'#F7D2B6',accent:'#3FA7D6',teamWord:'Precision',special:'honeycomb',best:'sparky',
+   motto:'“Check the data first.”',
+   lines:{hello:['Let’s test everything carefully, step by step.'],correct:['Correct. Just as I calculated.','The data agrees with us.','Precise and correct.'],wrong:['That doesn’t fit the data. Let’s check again.','Small error. I’ll recalculate.'],done:['Level complete. All results recorded.'],think:['Read the data carefully first.']}},
+  {id:'stylist',title:'The Stylist',zh:'造型設計師',traits:['artistic','trendy'],traitsZh:'有藝術感、跟得上潮流',hair:'#D24B86',skin:'#FFE0CC',accent:'#9B5DE5',teamWord:'Glow-Up',special:'heart',best:'bubbles',
+   motto:'“It must work and look amazing.”',
+   lines:{hello:['Let’s make products that people love to look at!'],correct:['Smart and stylish!','Nailed it — and it looks great!','Beautiful answer!'],wrong:['Hmm, that choice doesn’t match. Again!','Not my best look. Let’s fix it!'],done:['Level complete! We look fabulous.'],think:['What would look good and work well?']}},
+  {id:'guardian',title:'The Guardian',zh:'安全守護者',traits:['careful','responsible'],traitsZh:'細心、負責',hair:'#6B4423',skin:'#E8B894',accent:'#2EC4A6',teamWord:'Safe & Sound',special:'diamond',best:'mochi',
+   motto:'“Safety first, always.”',
+   lines:{hello:['Let’s build things that keep people safe.'],correct:['Safe and correct!','Checked twice. All good!','Solid answer.'],wrong:['Careful… let’s read it again.','Let’s slow down and check.'],done:['Level complete. Everything is safe.'],think:['Let’s read every word slowly.']}}
+];
+const HELPERS=[
+  {id:'sparky',name:'Sparky',zh:'電電',kind:'a tiny electric spark',kindZh:'一顆小電火花',pers:'hyper and loud',persZh:'超有活力、很吵',teamWord:'Sparks',
+   lines:{hello:['ZAP! Hi {name}! Let’s make some noise!'],correct:['ZAP! You’re electric, {name}!','Bzzzt! Bright answer!','Woohoo! Full power!'],wrong:['Oops! Short circuit! Try again!','Bzzt… wrong wire, {name}!'],hint:['Psst! I zapped one wrong answer away!'],done:['Level clear! I’m buzzing!'],nohint:['No more wrong answers to zap! You got this!']}},
+  {id:'gizmo',name:'Gizmo',zh:'機機',kind:'a lab robot',kindZh:'實驗室機器人',pers:'calm and logical',persZh:'冷靜、超理性',teamWord:'Gears',
+   lines:{hello:['Beep. Hello, {name}. Mission loaded.'],correct:['Beep. Accuracy: 100%.','Logic confirmed. Well done, {name}.','Result: excellent.'],wrong:['Beep-boop. Error: answer not found.','Recalculating… please try again.'],hint:['Analysis complete. One wrong option removed.'],done:['Level complete. Saving data… done.'],nohint:['Only one option left. Probability of success: high.']}},
+  {id:'mochi',name:'Mochi',zh:'麻糬',kind:'a lab cat',kindZh:'實驗室貓咪',pers:'sassy but smart',persZh:'傲嬌但很聰明',teamWord:'Paws',
+   lines:{hello:['Meow. Fine, {name}, I’ll help you. Maybe.'],correct:['Not bad, {name}. Not bad at all.','Purr-fect. I’m impressed. A little.','Hmm. You’re smarter than you look.'],wrong:['Meow… really? Try again.','Even my tail knows that’s wrong.'],hint:['Fine. That one is wrong. You owe me a fish.'],done:['Level done. Nap time? No? Okay…'],nohint:['I’m not helping anymore. You know this one.']}},
+  {id:'bubbles',name:'Bubbles',zh:'泡泡',kind:'a flask slime',kindZh:'燒瓶史萊姆',pers:'shy and kind',persZh:'害羞又溫柔',teamWord:'Bubbles',
+   lines:{hello:['Blub… h-hi {name}. I’ll do my best!'],correct:['Blub! You did it! I’m so proud!','Yay! *happy bubbles*','Wow… you’re amazing, {name}.'],wrong:['It’s okay… blub… try once more?','Don’t worry. Mistakes pop like bubbles!'],hint:['Um… I think this one is wrong… blub.'],done:['We did it! *bubbles everywhere*'],nohint:['I think… you already know it! Blub!']}}
+];
+const BEST={
+  'inventor-gizmo':['Wild ideas meet cool logic.','瘋狂點子遇上冷靜邏輯'],
+  'engineer-sparky':['Calm plans meet crazy energy.','冷靜計畫遇上爆炸能量'],
+  'stylist-bubbles':['Big style meets a gentle heart.','大膽風格遇上溫柔的心'],
+  'guardian-mochi':['A careful hero meets a cat who breaks rules.','謹慎的英雄遇上愛搗蛋的貓']
+};
+
+const ID_QUIZ=[
+  {vis:'sample:copper',q:'Look at this sample. Which metal is it?',zh:'看看這個樣本，它是哪一種金屬？',a:'copper',why:'Copper is reddish-brown and shiny. It is easy to spot!'},
+  {vis:'🥫',q:'Most soda cans are made of ______.',zh:'大部分的汽水罐是用什麼做的？',a:'aluminum',why:'Soda cans are made of aluminum because it is light and easy to shape.'},
+  {vis:'❓',q:'“I am made from iron and a little carbon. I am hard and gray. Builders love me.” Who am I?',zh:'「我由鐵和一點點碳做成，又硬又灰，建築工人很愛我。」我是誰？',a:'steel',why:'Steel is mostly iron with a little carbon.'},
+  {vis:'🔌',q:'The thin wires inside a phone charger are made of ______.',zh:'手機充電線裡面的細電線是用什麼做的？',a:'copper',why:'The wires inside cables are usually copper.'},
+  {vis:'❓',q:'“I am silver-white and very light. Airplanes use me a lot.” Who am I?',zh:'「我是銀白色、很輕，飛機常常用到我。」我是誰？',a:'aluminum',why:'Aluminum is silver-white and light, so airplanes use a lot of it.'},
+  {vis:'🌉',q:'The big beams in this bridge are made of ______.',zh:'這座橋的大樑是用什麼做的？',a:'steel',why:'Bridges need a very hard, heavy-duty metal: steel.'}
+];
+
+const STATIONS=[
+  {id:'circuit',icon:'⚡',title:'Circuit test',zh:'電路測試',
+   q:'Put each sample in the circuit. Which metal makes the bulb shine brightest?',qZh:'把每個樣本放進電路，哪一種金屬讓燈泡最亮？',
+   results:{copper:100,aluminum:62,steel:12},label:v=>`${v}% bright`,winner:'copper',
+   main:{from:'conduct',pos:'v.',fromZh:'傳導',opts:['conductive','conduction','conductor'],a:'conductive',zh:'導電的',why:'Electricity flows easily through copper. We say copper is conductive.'},
+   bonus:{from:'flexibility',pos:'n.',fromZh:'柔韌性',opts:['flexible','flexibly','flexing'],a:'flexible',zh:'可彎曲的',why:'Copper wire can bend again and again without breaking. It is flexible.'}},
+  {id:'scale',icon:'⚖️',title:'Weight test',zh:'重量測試',
+   q:'Three cubes are exactly the same size. Which one is the lightest?',qZh:'三個方塊一樣大，哪一個最輕？',
+   results:{copper:8.9,aluminum:2.7,steel:7.9},label:v=>`${v} g`,winner:'aluminum',
+   main:{from:'light + weight',pos:'',fromZh:'輕＋重量',opts:['lightweight','lightly','lightness'],a:'lightweight',zh:'輕的',why:'For the same size, aluminum weighs much less. It is lightweight.'},
+   bonus:{from:'malleability',pos:'n.',fromZh:'延展性',opts:['malleable','malleably','mallet'],a:'malleable',zh:'容易塑形的',why:'Aluminum can be pressed into thin sheets, like aluminum foil. It is malleable.'}},
+  {id:'press',icon:'🏋️',title:'Load test',zh:'承重測試',
+   q:'Three bars are exactly the same size. Which one holds the most weight before it bends?',qZh:'三根金屬棒一樣大，哪一根彎曲前能撐最重？',
+   results:{copper:70,aluminum:35,steel:250},label:v=>`holds ${v} kg`,winner:'steel',
+   main:{from:'strength',pos:'n.',fromZh:'強度',opts:['strong','strongly','strengthen'],a:'strong',zh:'堅固的',why:'Steel holds heavy loads without bending. It is strong.'},
+   bonus:{from:'durability',pos:'n.',fromZh:'耐用性',opts:['durable','durably','duration'],a:'durable',zh:'耐用的',why:'Steel lasts for many years, even with hard use. It is durable.'}}
+];
+const ADJ_META={conductive:['導電的','copper'],flexible:['可彎曲的','copper'],lightweight:['輕的','aluminum'],malleable:['容易塑形的','aluminum'],strong:['堅固的','steel'],durable:['耐用的','steel']};
+const ADJ_ORDER=['conductive','flexible','lightweight','malleable','strong','durable'];
+
+const PRODUCTS=[
+  {id:'cable',title:'Phone Charging Cable',name:'charging cable',accept:['charging cable','phone charging cable','cable','phone cable'],client:'🎮',clientName:'Leo, a gamer',
+   brief:'“My phone dies in the middle of my games! I need a cable that carries electricity fast and bends easily in my bag.”',
+   briefZh:'「我手機打遊戲打到一半就沒電！我需要一條導電快、在包包裡容易彎折的線。」',
+   material:'copper',adjs:['conductive','flexible'],purpose:'carry electricity to a phone',benefit:'charge the phone quickly'},
+  {id:'bottle',title:'Hiking Water Bottle',name:'water bottle',accept:['water bottle','hiking water bottle','bottle','hiking bottle'],client:'🥾',clientName:'Mia, a hiker',
+   brief:'“I climb mountains all day. My bottle must feel light in my backpack, and it should be easy to shape into a cool design.”',
+   briefZh:'「我整天爬山，水壺放在背包裡一定要輕，而且要容易做成很酷的造型。」',
+   material:'aluminum',adjs:['lightweight','malleable'],purpose:'carry water on long hikes',benefit:'feel light in a backpack'},
+  {id:'lock',title:'Bike Lock',name:'bike lock',accept:['bike lock','bicycle lock','lock'],client:'🚲',clientName:'Mr. Chen, a bike shop owner',
+   brief:'“Thieves keep stealing bikes from my shop! I need a lock that is very hard to break and lasts for years.”',
+   briefZh:'「小偷一直偷我店裡的腳踏車！我需要一個很難被破壞、可以用很多年的鎖。」',
+   material:'steel',adjs:['strong','durable'],purpose:'keep bikes safe from thieves',benefit:'stop thieves from breaking it'}
+];
+const COLORS=[['red','#E8505B'],['orange','#FF9F43'],['yellow','#FFD23F'],['green','#3DBE8B'],['blue','#3FA7D6'],['purple','#9B5DE5'],['pink','#FF8FB1'],['black','#2E3440']];
+const PATTERNS=[['striped','Striped'],['polka-dot','Polka-dot'],['star','Star'],['wave','Wave'],['zigzag','Zigzag'],['checked','Checked']];
+const SPECIAL_PAT={lightning:'Lightning',honeycomb:'Honeycomb',heart:'Heart',diamond:'Diamond'};
+
+/* ================= STATE ================= */
+let S;
+function fresh(){return{screen:'title',name:'',designer:null,helper:null,spark:0,
+  l1:{seen:new Set(),open:null,idx:0},
+  l2:{st:0,ran:new Set(),step:0},
+  adjs:new Set(),
+  teamStep:1,l3:{solved:{},active:null,product:null,color:'blue',pattern:'striped',pname:''},
+  slots:{},sentences:[]};}
+S=fresh();
+const D=()=>DESIGNERS.find(d=>d.id===S.designer);
+const H=()=>HELPERS.find(h=>h.id===S.helper);
+const nm=()=>S.name.trim()||'Designer';
+
+/* ================= SVG ART ================= */
+function designerSVG(d,size){
+  const s=d.skin,h=d.hair,a=d.accent;
+  let back='',hair='',acc='';
+  if(d.id==='inventor'){
+    hair=`<path d="M27 56 L23 34 L36 38 L35 21 L48 30 L57 13 L65 28 L77 15 L80 32 L95 27 L92 56 Q86 40 72 41 Q61 35 48 43 Q37 41 27 56Z" fill="${h}"/>`;
+    acc=`<rect x="27" y="31" width="66" height="7" rx="3.5" fill="#44515E"/><circle cx="47" cy="34" r="9" fill="#9FE6F5" stroke="#44515E" stroke-width="3"/><circle cx="73" cy="34" r="9" fill="#9FE6F5" stroke="#44515E" stroke-width="3"/><circle cx="44" cy="31" r="2.4" fill="#fff"/><circle cx="70" cy="31" r="2.4" fill="#fff"/>`;
+  }else if(d.id==='engineer'){
+    hair=`<path d="M27 60 Q23 21 60 19 Q97 21 93 60 Q91 41 80 36 Q62 41 41 33 Q32 43 27 60Z" fill="${h}"/><path d="M41 33 Q54 26 70 29" stroke="#ffffff55" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    acc=`<circle cx="48" cy="61" r="10" fill="#ffffff40" stroke="#2B3A4A" stroke-width="2.6"/><circle cx="72" cy="61" r="10" fill="#ffffff40" stroke="#2B3A4A" stroke-width="2.6"/><path d="M58 61 h4" stroke="#2B3A4A" stroke-width="2.6"/>`;
+  }else if(d.id==='stylist'){
+    back=`<path d="M25 52 Q25 17 60 17 Q95 17 95 52 L99 104 Q60 114 21 104Z" fill="${h}"/>`;
+    hair=`<path d="M27 56 Q29 23 60 21 Q91 23 93 56 Q81 35 64 40 Q50 31 27 56Z" fill="${h}"/>`;
+    acc=`<ellipse cx="68" cy="21" rx="28" ry="10" fill="${a}" transform="rotate(-10 68 21)"/><circle cx="73" cy="10" r="3.5" fill="${a}"/><circle cx="38" cy="47" r="4" fill="#FFC93C"/>`;
+  }else{
+    hair=`<path d="M28 58 Q26 30 60 28 Q94 30 92 58 Q86 46 74 46 Q60 50 46 46 Q34 46 28 58Z" fill="${h}"/>`;
+    acc=`<path d="M25 44 Q26 11 60 11 Q94 11 95 44Z" fill="#FFC93C"/><rect x="17" y="41" width="86" height="9" rx="4.5" fill="#F0B31F"/><rect x="55" y="12" width="10" height="30" rx="4" fill="#F0B31F"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" ${size?`width="${size}" height="${size*140/120}"`:''} role="img" aria-label="${esc(d.title)}">
+  ${back}
+  <path d="M28 140 Q28 99 60 95 Q92 99 92 140Z" fill="#FFFFFF" stroke="#C9DDE2" stroke-width="2"/>
+  <path d="M51 97 L60 116 L69 97Z" fill="${a}"/>
+  <path d="M60 116 V140" stroke="#C9DDE2" stroke-width="2"/>
+  <rect x="70" y="118" width="13" height="10" rx="2" fill="#EAF3F5" stroke="#C9DDE2"/><rect x="73" y="113" width="3" height="9" rx="1.5" fill="${a}"/>
+  <rect x="53" y="84" width="14" height="14" rx="5" fill="${s}"/>
+  <circle cx="60" cy="58" r="32" fill="${s}"/>
+  <circle cx="28" cy="61" r="5" fill="${s}"/><circle cx="92" cy="61" r="5" fill="${s}"/>
+  ${hair}
+  <ellipse cx="48" cy="62" rx="4.6" ry="6.2" fill="#2B2140"/><ellipse cx="72" cy="62" rx="4.6" ry="6.2" fill="#2B2140"/>
+  <circle cx="49.6" cy="59.6" r="1.8" fill="#fff"/><circle cx="73.6" cy="59.6" r="1.8" fill="#fff"/>
+  <ellipse cx="40" cy="72" rx="5.5" ry="3.3" fill="#FF8E9A" opacity=".55"/><ellipse cx="80" cy="72" rx="5.5" ry="3.3" fill="#FF8E9A" opacity=".55"/>
+  <path d="M54 73 Q60 79 66 73" stroke="#7A3B3B" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  ${acc}
+  </svg>`;
+}
+function helperSVG(h){
+  const w='xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="'+esc(h.name)+'"';
+  const eyes=(y,c='#2B2140')=>`<ellipse cx="40" cy="${y}" rx="4.2" ry="5.4" fill="${c}"/><ellipse cx="60" cy="${y}" rx="4.2" ry="5.4" fill="${c}"/><circle cx="41.4" cy="${y-2}" r="1.6" fill="#fff"/><circle cx="61.4" cy="${y-2}" r="1.6" fill="#fff"/>`;
+  if(h.id==='sparky')return `<svg ${w}><path d="M50 6 L60 30 L86 22 L70 44 L94 56 L68 62 L76 88 L54 72 L42 94 L38 68 L12 74 L28 54 L8 38 L34 36 L30 12 Z" fill="#FFB238" stroke="#FFB238" stroke-width="7" stroke-linejoin="round"/><path d="M50 18 L57 36 L76 31 L64 46 L80 55 L62 59 L67 76 L53 65 L44 80 L41 63 L23 66 L34 53 L20 42 L38 41 L36 25Z" fill="#FFD84D"/>${eyes(48)}<path d="M42 59 Q50 67 58 59" stroke="#7A3B3B" stroke-width="3" fill="#E8505B" stroke-linecap="round"/><ellipse cx="33" cy="57" rx="4" ry="2.5" fill="#FF8E6A" opacity=".7"/><ellipse cx="67" cy="57" rx="4" ry="2.5" fill="#FF8E6A" opacity=".7"/></svg>`;
+  if(h.id==='gizmo')return `<svg ${w}><line x1="50" y1="8" x2="50" y2="20" stroke="#6C8A9C" stroke-width="3"/><circle cx="50" cy="8" r="5" fill="#FF6F61"/><rect x="12" y="38" width="8" height="18" rx="4" fill="#6C8A9C"/><rect x="80" y="38" width="8" height="18" rx="4" fill="#6C8A9C"/><rect x="18" y="20" width="64" height="52" rx="18" fill="#9ADCF2" stroke="#5FA9C6" stroke-width="2.5"/><rect x="27" y="30" width="46" height="32" rx="11" fill="#17414A"/><rect x="35" y="39" width="8" height="10" rx="4" fill="#6FF2E1"/><rect x="57" y="39" width="8" height="10" rx="4" fill="#6FF2E1"/><path d="M44 54 Q50 58 56 54" stroke="#6FF2E1" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="30" y="74" width="40" height="20" rx="9" fill="#C3EDF8" stroke="#5FA9C6" stroke-width="2.5"/><circle cx="50" cy="84" r="4" fill="#FFC93C"/></svg>`;
+  if(h.id==='mochi')return `<svg ${w}><path d="M18 40 L22 10 L42 28Z" fill="#FFF6EC" stroke="#E3CDB5" stroke-width="2.5" stroke-linejoin="round"/><path d="M82 40 L78 10 L58 28Z" fill="#FFF6EC" stroke="#E3CDB5" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 20 L32 29 L26 32Z" fill="#FFB3C1"/><path d="M76 20 L68 29 L74 32Z" fill="#FFB3C1"/><ellipse cx="50" cy="56" rx="38" ry="34" fill="#FFF6EC" stroke="#E3CDB5" stroke-width="2.5"/><path d="M38 24 Q44 30 42 36 M50 22 V34 M62 24 Q56 30 58 36" stroke="#E7B98A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M33 54 Q40 48 47 54" stroke="#2B2140" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M53 54 Q60 48 67 54" stroke="#2B2140" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M47 62 L53 62 L50 66Z" fill="#FF8E9A"/><path d="M43 69 Q46.5 73 50 69 Q53.5 73 57 69" stroke="#7A3B3B" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M14 60 H30 M14 68 L30 65 M86 60 H70 M86 68 L70 65" stroke="#C9B49E" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="32" cy="66" rx="5" ry="3" fill="#FF9AA2" opacity=".5"/><ellipse cx="68" cy="66" rx="5" ry="3" fill="#FF9AA2" opacity=".5"/></svg>`;
+  return `<svg ${w}><path d="M38 8 H62 V36 L86 80 Q90 94 76 94 H24 Q10 94 14 80 L38 36Z" fill="#E8F7FF" fill-opacity=".75" stroke="#8FC6DE" stroke-width="3" stroke-linejoin="round"/><rect x="34" y="4" width="32" height="8" rx="4" fill="#8FC6DE"/><path d="M27 58 Q50 50 73 58 L82 78 Q86 90 74 90 H26 Q14 90 18 78Z" fill="#7BE0A6"/>${eyes(70,'#1F5A3C')}<path d="M45 80 Q50 84 55 80" stroke="#1F5A3C" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="78" rx="4" ry="2.4" fill="#FF9AA2" opacity=".6"/><ellipse cx="66" cy="78" rx="4" ry="2.4" fill="#FF9AA2" opacity=".6"/><circle class="bub" cx="44" cy="44" r="3.5" fill="#BFF3D6"/><circle class="bub" cx="56" cy="40" r="2.5" fill="#BFF3D6"/><circle class="bub" cx="50" cy="30" r="2" fill="#BFF3D6"/></svg>`;
+}
+function cubeSVG(k,label){
+  const f=METALS[k].faces;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="${esc(label||METALS[k].name+' sample')}"><ellipse cx="50" cy="92" rx="34" ry="5" fill="#0002"/><path d="M50 12 L86 31 L50 50 L14 31Z" fill="${f[0]}"/><path d="M14 31 L50 50 V90 L14 71Z" fill="${f[1]}"/><path d="M50 50 L86 31 V71 L50 90Z" fill="${f[2]}"/><path d="M22 36 L42 46 V54 L22 44Z" fill="#fff" opacity=".28"/><path d="M73 15 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#fff"/></svg>`;
+}
+function patternDef(id,pid,pc){
+  const P=(w,h,inner,extra='')=>`<pattern id="${pid}" width="${w}" height="${h}" patternUnits="userSpaceOnUse" ${extra}>${inner}</pattern>`;
+  switch(id){
+    case'striped':return P(16,16,`<rect width="7" height="16" fill="${pc}"/>`,'patternTransform="rotate(45)"');
+    case'polka-dot':return P(18,18,`<circle cx="5" cy="5" r="3.2" fill="${pc}"/><circle cx="14" cy="14" r="3.2" fill="${pc}"/>`);
+    case'star':return P(24,24,`<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="${pc}"/>`);
+    case'wave':return P(24,12,`<path d="M0 6 Q6 0 12 6 T24 6" stroke="${pc}" stroke-width="2.6" fill="none"/>`);
+    case'zigzag':return P(16,10,`<polyline points="0,8 8,2 16,8" stroke="${pc}" stroke-width="2.6" fill="none"/>`);
+    case'checked':return P(20,20,`<rect width="10" height="10" fill="${pc}"/><rect x="10" y="10" width="10" height="10" fill="${pc}"/>`);
+    case'lightning':return P(26,26,`<path d="M14 2 L6 14 H12 L10 24 L20 10 H14Z" fill="${pc}"/>`);
+    case'honeycomb':return P(24,21,`<path d="M6 1 H18 L23 10.5 L18 20 H6 L1 10.5Z" stroke="${pc}" stroke-width="2" fill="none"/>`);
+    case'heart':return P(22,22,`<path d="M11 18 C3 12 3 6 7 5 C9 4.5 10.5 5.5 11 7 C11.5 5.5 13 4.5 15 5 C19 6 19 12 11 18Z" fill="${pc}"/>`);
+    case'diamond':return P(18,18,`<path d="M9 2 L16 9 L9 16 L2 9Z" fill="${pc}"/>`);
+  }
+  return P(10,10,'');
+}
+const patInk=hex=>['#FFD23F','#FF9F43','#FF8FB1'].includes(hex)?'rgba(23,65,74,.3)':'rgba(255,255,255,.55)';
+let uidN=0;
+function productSVG(pid,hex,pat){
+  const u='p'+(++uidN), P=u+'pat', pc=patInk(hex);
+  const defs=`<defs>${patternDef(pat,P,pc)}
+    <linearGradient id="${u}al" x1="0" x2="1"><stop offset="0" stop-color="#F4F7FA"/><stop offset=".55" stop-color="#C9D3DC"/><stop offset="1" stop-color="#8E9DAB"/></linearGradient>
+    <linearGradient id="${u}st" x1="0" x2="1"><stop offset="0" stop-color="#B3BDC8"/><stop offset=".5" stop-color="#7A8796"/><stop offset="1" stop-color="#4A5563"/></linearGradient>
+    <linearGradient id="${u}cu" x1="0" x2="1"><stop offset="0" stop-color="#F6BE96"/><stop offset="1" stop-color="#A9512B"/></linearGradient></defs>`;
+  let body='';
+  if(pid==='bottle'){
+    const shape='M104 44 H136 Q140 44 140 50 V58 Q162 66 162 92 V184 Q162 204 142 204 H98 Q78 204 78 184 V92 Q78 66 100 58 V50 Q100 44 104 44Z';
+    body=`<ellipse cx="120" cy="208" rx="64" ry="8" fill="#0002"/>
+    <rect x="101" y="14" width="38" height="26" rx="7" fill="url(#${u}al)"/><rect x="96" y="36" width="48" height="9" rx="4.5" fill="#8E9DAB"/>
+    <path d="${shape}" fill="${hex}"/><path d="${shape}" fill="url(#${P})"/>
+    <path d="M100 58 Q120 64 140 58 V64 Q120 70 100 64Z" fill="url(#${u}al)"/>
+    <rect x="90" y="84" width="10" height="104" rx="5" fill="#fff" opacity=".38"/>
+    <path d="M78 178 Q120 188 162 178 V184 Q162 204 142 204 H98 Q78 204 78 184Z" fill="url(#${u}al)" opacity=".9"/>`;
+  }else if(pid==='cable'){
+    body=`<ellipse cx="120" cy="208" rx="90" ry="7" fill="#0002"/>
+    <path d="M82 66 C160 66 60 160 140 156 S214 120 206 178" stroke="${hex}" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <path d="M82 66 C160 66 60 160 140 156 S214 120 206 178" stroke="url(#${P})" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <path d="M86 61 C140 62 96 110 104 128" stroke="#fff" stroke-opacity=".35" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="8" y="52" width="24" height="26" rx="6" fill="url(#${u}al)"/><rect x="13" y="61" width="14" height="8" rx="3" fill="#5E6B7A"/>
+    <rect x="28" y="42" width="58" height="46" rx="14" fill="${hex}"/><rect x="28" y="42" width="58" height="46" rx="14" fill="url(#${P})"/>
+    <rect x="36" y="48" width="38" height="6" rx="3" fill="#fff" opacity=".4"/>
+    <circle cx="206" cy="184" r="13" fill="${hex}"/><circle cx="206" cy="184" r="9" fill="url(#${u}cu)"/>
+    <circle cx="203" cy="181" r="2.4" fill="#F6BE96"/><circle cx="209" cy="183" r="2.4" fill="#F6BE96"/><circle cx="205" cy="188" r="2.4" fill="#F6BE96"/>`;
+  }else{
+    body=`<ellipse cx="120" cy="206" rx="80" ry="8" fill="#0002"/>
+    <path d="M86 122 V76 Q86 34 120 34 Q154 34 154 76 V122" stroke="url(#${u}st)" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M80 110 V78 Q80 44 104 36" stroke="#fff" stroke-opacity=".35" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="52" y="108" width="136" height="76" rx="24" fill="${hex}"/><rect x="52" y="108" width="136" height="76" rx="24" fill="url(#${P})"/>
+    <rect x="64" y="116" width="80" height="8" rx="4" fill="#fff" opacity=".35"/>
+    <circle cx="120" cy="146" r="13" fill="url(#${u}st)"/><circle cx="120" cy="143" r="4.5" fill="#2B2D3A"/><rect x="118" y="144" width="4" height="10" rx="2" fill="#2B2D3A"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 220" role="img" aria-label="Product preview">${defs}${body}</svg>`;
+}
+function sceneSVG(){
+  return `<svg viewBox="0 0 800 380" role="img" aria-label="A bright, friendly science lab with three metal samples on the bench">
+  <defs><pattern id="tiles" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0 H0 V40" fill="none" stroke="var(--scene-tile)" stroke-width="2"/></pattern></defs>
+  <rect width="800" height="380" fill="var(--scene-wall)"/><rect width="800" height="300" fill="url(#tiles)"/>
+  <g transform="translate(540 34)"><rect width="210" height="160" rx="18" fill="var(--scene-frame)"/><rect x="10" y="10" width="190" height="140" rx="12" fill="var(--scene-sky)"/>
+    <ellipse cx="62" cy="60" rx="30" ry="14" fill="#fff" opacity=".9"/><ellipse cx="84" cy="52" rx="22" ry="14" fill="#fff" opacity=".9"/><ellipse cx="150" cy="104" rx="26" ry="11" fill="#fff" opacity=".8"/>
+    <circle cx="160" cy="44" r="16" fill="#FFD84D"/><rect x="102" y="10" width="6" height="140" fill="var(--scene-frame)"/><rect x="10" y="78" width="190" height="6" fill="var(--scene-frame)"/></g>
+  <line x1="120" y1="0" x2="110" y2="28" stroke="var(--ink-soft)" stroke-width="3"/><line x1="300" y1="0" x2="310" y2="28" stroke="var(--ink-soft)" stroke-width="3"/>
+  <g transform="rotate(-2 210 70)"><rect x="60" y="24" width="300" height="94" rx="18" fill="var(--scene-sign)"/>
+    <text x="210" y="80" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="46" fill="#FFFFFF">Metal Lab</text>
+    <text x="210" y="104" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="500" font-size="17" fill="#FFC93C">design studio</text>
+    <circle cx="80" cy="44" r="5" fill="#FFC93C"/><circle cx="340" cy="44" r="5" fill="#FFC93C"/></g>
+  <rect x="40" y="200" width="330" height="12" rx="6" fill="var(--scene-wood)"/>
+  <g><path d="M70 150 H90 V168 L104 196 Q106 200 100 200 H60 Q54 200 56 196 L70 168Z" fill="#E8F7FF" fill-opacity=".8" stroke="#8FC6DE" stroke-width="3"/><path d="M62 186 H98 L102 196 Q103 199 99 199 H61 Q57 199 58 196Z" fill="#FF6F61"/></g>
+  <g><circle cx="150" cy="178" r="22" fill="#E8F7FF" fill-opacity=".8" stroke="#8FC6DE" stroke-width="3"/><rect x="143" y="136" width="14" height="24" fill="#E8F7FF" stroke="#8FC6DE" stroke-width="3"/><path d="M129 182 Q150 174 171 182 Q170 199 150 200 Q130 199 129 182Z" fill="#2EC4A6"/></g>
+  <g><rect x="200" y="168" width="110" height="10" rx="4" fill="var(--scene-wood)"/>${[214,240,266,292].map((x,i)=>`<rect x="${x-6}" y="140" width="12" height="46" rx="6" fill="#E8F7FF" fill-opacity=".8" stroke="#8FC6DE" stroke-width="2.5"/><rect x="${x-4}" y="${160+i*3}" width="8" height="${24-i*3}" rx="4" fill="${['#FFC93C','#9B5DE5','#FF8FB1','#3FA7D6'][i]}"/>`).join('')}</g>
+  <rect x="330" y="150" width="30" height="50" rx="8" fill="#9B5DE5" opacity=".85"/><rect x="335" y="140" width="20" height="14" rx="4" fill="#8E9DAB"/>
+  <rect x="0" y="292" width="800" height="22" rx="4" fill="var(--scene-bench-top)"/><rect x="0" y="314" width="800" height="66" fill="var(--scene-bench)"/>
+  ${[60,250,440,630].map(x=>`<rect x="${x}" y="326" width="150" height="44" rx="10" fill="none" stroke="#ffffff33" stroke-width="3"/><rect x="${x+65}" y="344" width="20" height="6" rx="3" fill="#ffffff55"/>`).join('')}
+  <g transform="translate(70 212)"><rect x="18" y="80" width="64" height="14" rx="6" fill="#4E6E74"/><rect x="44" y="20" width="12" height="62" rx="5" fill="#6C8A9C"/><rect x="26" y="8" width="20" height="44" rx="8" fill="#9ADCF2" transform="rotate(-24 36 30)"/><rect x="30" y="56" width="40" height="8" rx="4" fill="#4E6E74"/></g>
+  ${MK.map((k,i)=>{const f=METALS[k].faces,x=260+i*110;return `<g transform="translate(${x} 222)"><ellipse cx="40" cy="70" rx="40" ry="7" fill="#0002"/><path d="M40 10 L70 26 L40 42 L10 26Z" fill="${f[0]}"/><path d="M10 26 L40 42 V74 L10 58Z" fill="${f[1]}"/><path d="M40 42 L70 26 V58 L40 74Z" fill="${f[2]}"/><path d="M60 12 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z" fill="#fff"/></g>`}).join('')}
+  <g transform="translate(610 210)"><path d="M10 0 H50 V20 L62 72 Q64 82 54 82 H6 Q-4 82 -2 72 L10 20Z" fill="#E8F7FF" fill-opacity=".8" stroke="#8FC6DE" stroke-width="3"/><path d="M4 50 H56 L62 72 Q64 81 54 81 H6 Q-4 81 -2 72Z" fill="#FFC93C"/><circle class="bub" cx="22" cy="44" r="4" fill="#FFE38A"/><circle class="bub" cx="34" cy="40" r="3" fill="#FFE38A"/><circle class="bub" cx="40" cy="46" r="3.5" fill="#FFE38A"/></g>
+  <g transform="translate(700 214)"><path d="M10 50 H62 L56 84 H16Z" fill="#FF6F61"/><path d="M36 50 Q18 22 30 6 Q38 24 36 50 M36 50 Q52 20 66 18 Q58 40 36 50 M36 50 Q20 36 6 34 Q16 48 36 50" fill="#2EC4A6"/></g>
+  </svg>`;
+}
+function resultSVG(st,k,v){
+  if(st.id==='circuit'){
+    const o=v/100;
+    return `<svg class="res" viewBox="0 0 130 96" aria-hidden="true">${o>.5?`<g stroke="#FFC93C" stroke-width="3" stroke-linecap="round" opacity="${o}"><path d="M65 4 V12"/><path d="M38 14 L44 20"/><path d="M92 14 L86 20"/><path d="M28 38 H36"/><path d="M94 38 H102"/></g>`:''}<circle cx="65" cy="38" r="${18+o*6}" fill="#FFE066" opacity="${o*.55}"/><circle cx="65" cy="38" r="17" fill="${o>.3?'#FFE066':'#F2F2E8'}" fill-opacity="${.35+o*.65}" stroke="#8FC6DE" stroke-width="2.5"/><rect x="57" y="54" width="16" height="12" rx="3" fill="#8E9DAB"/><path d="M20 80 H58 M72 80 H110" stroke="#4E6E74" stroke-width="3"/><rect x="58" y="74" width="14" height="12" rx="3" fill="${METALS[k].dot}"/><path d="M65 66 V74" stroke="#4E6E74" stroke-width="3"/></svg>`;
+  }
+  if(st.id==='scale'){
+    const ang=-60+(v/9)*120;
+    return `<svg class="res" viewBox="0 0 130 96" aria-hidden="true"><rect x="22" y="44" width="86" height="46" rx="12" fill="#9ADCF2" stroke="#5FA9C6" stroke-width="2.5"/><path d="M40 82 A25 25 0 0 1 90 82" fill="#fff" stroke="#5FA9C6" stroke-width="2"/><line x1="65" y1="82" x2="${65+22*Math.sin(ang*Math.PI/180)}" y2="${82-22*Math.cos(ang*Math.PI/180)}" stroke="#FF6F61" stroke-width="3" stroke-linecap="round"/><rect x="30" y="36" width="70" height="8" rx="4" fill="#6C8A9C"/><g transform="translate(47 4)"><path d="M18 2 L34 10 L18 18 L2 10Z" fill="${METALS[k].faces[0]}"/><path d="M2 10 L18 18 V32 L2 24Z" fill="${METALS[k].faces[1]}"/><path d="M18 18 L34 10 V24 L18 32Z" fill="${METALS[k].faces[2]}"/></g></svg>`;
+  }
+  const bend=Math.max(2,Math.round(40-v/7));
+  return `<svg class="res" viewBox="0 0 130 96" aria-hidden="true"><rect x="8" y="40" width="14" height="44" rx="4" fill="#6C8A9C"/><rect x="108" y="40" width="14" height="44" rx="4" fill="#6C8A9C"/><path d="M14 40 Q65 ${40+bend*1.6} 116 40" stroke="${METALS[k].dot}" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="50" y="${8+bend*0.8}" width="30" height="22" rx="5" fill="#17414A"/><text x="65" y="${23+bend*0.8}" text-anchor="middle" font-size="10" font-weight="700" fill="#FFC93C">kg</text></svg>`;
+}
+
+/* ================= SOUND & SPEECH ================= */
+let soundOn=true,ac=null;
+function sfx(kind){
+  if(!soundOn)return;
+  try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;ac=ac||new A();if(ac.state==='suspended')ac.resume();
+    const t=ac.currentTime,notes={ok:[523,659,784],no:[330,262],win:[523,659,784,1047],tap:[880]}[kind]||[600];
+    notes.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),a=t+i*.1;o.type=kind==='no'?'triangle':'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,a);g.gain.exponentialRampToValueAtTime(.08,a+.02);g.gain.exponentialRampToValueAtTime(.0001,a+.16);o.connect(g).connect(ac.destination);o.start(a);o.stop(a+.18);});
+  }catch(e){}
+}
+let tts=null,dl=null;
+const hasSynth='speechSynthesis' in window;
+function say(text){
+  if(tts){tts.speak(text,{language:'en',voice:'airy'}).catch(()=>synthSay(text));return;}
+  synthSay(text);
+}
+function synthSay(text){try{if(!hasSynth)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.9;speechSynthesis.speak(u);}catch(e){}}
+const spk=t=>`<button class="speak" type="button" data-say="${esc(t)}" aria-label="Listen: ${esc(t)}">🔈</button>`;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-say]');if(b){e.preventDefault();e.stopPropagation();say(b.dataset.say);}},true);
+if(!hasSynth)document.documentElement.classList.add('no-tts');
+(async()=>{try{if(window.claude&&window.claude.use){
+  const [t,d]=await Promise.all([window.claude.use('tts').catch(()=>null),window.claude.use('downloads').catch(()=>null)]);
+  tts=t;dl=d;if(tts)document.documentElement.classList.remove('no-tts');
+}}catch(e){}})();
+
+/* ================= DOCK / DIALOGUE ================= */
+let hintFn=null;
+function fillName(s){return s.replace(/\{name\}/g,nm());}
+function talk(dl_,hl){
+  if(!S.designer)return;
+  if(dl_!=null){$('#dTxt').textContent=fillName(dl_);bump('#dSay');}
+  if(hl!=null){$('#hTxt').textContent=fillName(hl);bump('#hSay');}
+}
+function bump(sel){const e=$(sel);e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');}
+function react(kind){talk(pick(D().lines[kind]||D().lines.correct),pick(H().lines[kind]||H().lines.correct));}
+function setupDock(){
+  const d=D(),h=H();
+  $('#dAv').innerHTML=designerSVG(d);$('#hAv').innerHTML=helperSVG(h);
+  $('#dName').textContent=nm()+' · '+d.title;$('#hName').textContent=h.name;
+  $('#hintBtn').textContent='💡 Ask '+h.name;
+  $('#dock').classList.remove('hidden');updateSpark();
+}
+function setHint(fn){hintFn=fn;$('#hintBtn').classList.toggle('hidden',!fn);}
+$('#hintBtn').onclick=()=>{if(hintFn)hintFn();};
+function addSpark(n){S.spark=Math.min(100,S.spark+n);updateSpark();if(n>0)burst();}
+function updateSpark(){$('#sparkFill').style.width=S.spark+'%';$('#sparkNum').textContent=S.spark;}
+function burst(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const r=$('#sparkFill').getBoundingClientRect();
+  for(let i=0;i<6;i++){const s=document.createElement('span');s.className='burst';s.textContent=pick(['✦','✧','⚡','★']);
+    s.style.left=(r.right-6)+'px';s.style.top=(r.top-10)+'px';s.style.color=pick(['#FFC93C','#FF6F61','#2EC4A6']);
+    s.style.setProperty('--dx',(Math.random()*120-60)+'px');s.style.setProperty('--dy',(-40-Math.random()*70)+'px');
+    document.body.appendChild(s);setTimeout(()=>s.remove(),950);}
+}
+function sparkTitle(){return S.spark>=80?'Super spark':S.spark>=45?'Bright spark':'Warm-up spark';}
+
+/* generic single-answer question */
+function ask(el,opts,correct,onDone){
+  let missed=false,done=false;
+  el.innerHTML=opts.map(o=>`<button type="button" class="opt" data-v="${esc(o.v)}">${o.html}</button>`).join('');
+  const btns=[...el.querySelectorAll('.opt')];
+  btns.forEach(b=>b.addEventListener('click',()=>{
+    if(done||b.disabled)return;
+    if(b.dataset.v===correct){
+      done=true;b.classList.add('right');btns.forEach(x=>x.disabled=true);
+      addSpark(missed?1:4);sfx('ok');react('correct');setHint(null);onDone(missed);
+    }else{missed=true;b.classList.add('wrong');b.disabled=true;sfx('no');react('wrong');}
+  }));
+  setHint(()=>{
+    const w=btns.filter(x=>!x.disabled&&x.dataset.v!==correct);
+    if(!w.length){talk(null,pick(H().lines.nohint));return;}
+    const g=pick(w);g.disabled=true;g.classList.add('gone');missed=true;
+    talk(pick(D().lines.think),pick(H().lines.hint));sfx('tap');
+  });
+}
+const metalOpt=k=>({v:k,html:`${cubeSVG(k)}<span>${METALS[k].name} <span class="zh">${METALS[k].zh}</span></span>`});
+
+/* ================= MAP ================= */
+const STOPS=[['👥','Team'],['🔍','Identify'],['🧪','Describe'],['🎨','Design'],['🎤','Present']];
+const STOP_OF={title:-1,team:0,'id-learn':1,'id-quiz':1,'id-done':1,lab:2,'lab-done':2,orders:3,custom:3,write:4,final:4};
+function drawMap(){
+  const cur=STOP_OF[S.screen];
+  $('#map').innerHTML=STOPS.map((s,i)=>`<li class="${i<cur?'done':i===cur?'now':''}"><div class="stop" ${i===cur?'aria-current="step"':''}><span class="dot" aria-hidden="true">${i<cur?'✓':s[0]}</span><span class="l">${s[1]}</span></div>${i<STOPS.length-1?'<span class="bar"></span>':''}</li>`).join('');
+}
+function go(screen){S.screen=screen;setHint(null);render();drawMap();window.scrollTo({top:0,behavior:'auto'});}
+
+/* ================= SCREENS ================= */
+function render(){
+  ({title:rTitle,team:rTeam,'id-learn':rLearn,'id-quiz':rQuiz,'id-done':rIdDone,lab:rLab,'lab-done':rLabDone,orders:rOrders,custom:rCustom,write:rWrite,final:rFinal})[S.screen]();
+}
+
+function rTitle(){
+  $('#dock').classList.add('hidden');
+  stage.innerHTML=`
+  <div class="scene-wrap">${sceneSVG()}</div>
+  <div class="panel mt">
+    <h1 class="title-xl">Welcome to the Metal Lab</h1>
+    <p class="lead">You are a new product designer. Build your team, get to know three metals, test what they can do, and design a real product for a client. <span class="zh">你是新來的產品設計師：組隊、認識三種金屬、做實驗、替客戶設計產品。</span></p>
+    <div class="levels">
+      <div class="level-tile"><span class="n">1</span><b>Identify</b><span class="zh">辨識材質</span><p style="margin:6px 0 0;font-size:15px">Meet copper, aluminum and steel. Can you tell them apart?</p></div>
+      <div class="level-tile"><span class="n">2</span><b>Describe</b><span class="zh">特性→形容詞</span><p style="margin:6px 0 0;font-size:15px">Run lab tests and turn each result into an adjective.</p></div>
+      <div class="level-tile"><span class="n">3</span><b>Design</b><span class="zh">設計產品</span><p style="margin:6px 0 0;font-size:15px">Pick the right metal, style your product, and write your pitch.</p></div>
+    </div>
+    <button class="btn" id="startBtn">Build my team</button>
+  </div>`;
+  $('#startBtn').onclick=()=>{sfx('tap');go('team');};
+}
+
+const strip=svg=>svg.replace(/^<svg[^>]*>|<\/svg>$/g,'');
+function teamDots(n){return `<div class="steps3" aria-label="Step ${n} of 3">${[1,2,3].map(i=>`<span class="${i<n?'done':i===n?'now':''}">${i<n?'✓':i}</span>`).join('<i></i>')}</div>`;}
+function rTeam(){
+  $('#dock').classList.add('hidden');
+  const n=S.teamStep||1;
+  if(n===1){
+    stage.innerHTML=`<div class="panel team-panel">
+      ${teamDots(1)}
+      <span class="tape">Step 1 · Your designer</span>
+      <h1 class="title-l">Who are you in the lab?</h1>
+      <p class="lead">Type your name, then choose your designer style. <span class="zh">輸入名字，選一種設計師特質。</span></p>
+      <label class="sr" for="nameIn">Your name</label>
+      <input class="name-in" id="nameIn" maxlength="16" placeholder="Your English name" value="${esc(S.name)}" autocomplete="off" enterkeyhint="done">
+      <div class="grid4 mt team-grid">${DESIGNERS.map(d=>`
+        <button type="button" class="pick ${S.designer===d.id?'sel':''}" data-d="${d.id}" aria-pressed="${S.designer===d.id}">
+          <span class="av">${designerSVG(d)}</span><b>${d.title}</b><span class="zh">${d.zh}</span>
+          <div class="chiprow">${d.traits.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+          <span class="traits motto">${d.motto}</span></button>`).join('')}</div>
+      <div class="row mt team-nav"><button class="btn" id="next1">Next: pick a helper</button><span id="teamMsg" style="font-size:14px;color:var(--bad)"></span></div>
+    </div>`;
+    $('#nameIn').oninput=e=>{S.name=e.target.value;};
+    $('#nameIn').onkeydown=e=>{if(e.key==='Enter')e.target.blur();};
+    stage.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{S.designer=b.dataset.d;sfx('tap');
+      stage.querySelectorAll('[data-d]').forEach(x=>{const on=x.dataset.d===S.designer;x.classList.toggle('sel',on);x.setAttribute('aria-pressed',on);});});
+    $('#next1').onclick=()=>{
+      if(!S.name.trim()){$('#teamMsg').innerHTML='Please type your name first. <span class="zh">請先輸入名字。</span>';$('#nameIn').focus();return;}
+      if(!S.designer){$('#teamMsg').innerHTML='Please choose a designer. <span class="zh">請選一位設計師。</span>';return;}
+      S.teamStep=2;sfx('tap');rTeam();window.scrollTo({top:0});
+    };
+  }else if(n===2){
+    stage.innerHTML=`<div class="panel team-panel">
+      ${teamDots(2)}
+      <span class="tape">Step 2 · Your lab partner</span>
+      <h1 class="title-l">Pick a helper</h1>
+      <p class="lead">Your helper gives hints and reacts to every answer. Opposites make the biggest sparks! <span class="zh">小幫手會給提示、對你的答案有反應。個性相反的組合火花最大！</span></p>
+      <div class="grid4 team-grid">${HELPERS.map(h=>`
+        <button type="button" class="pick ${S.helper===h.id?'sel':''}" data-h="${h.id}" aria-pressed="${S.helper===h.id}">
+          <span class="av h">${helperSVG(h)}</span><b>${h.name}</b><span class="zh">${h.zh}・${h.kindZh}・${h.persZh}</span>
+          <span class="traits">${h.kind}, ${h.pers}</span></button>`).join('')}</div>
+      <div class="row mt team-nav"><button class="btn alt" id="back2">Back</button><button class="btn" id="next2">Next: see our team</button><span id="teamMsg" style="font-size:14px;color:var(--bad)"></span></div>
+    </div>`;
+    stage.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{S.helper=b.dataset.h;sfx('tap');
+      stage.querySelectorAll('[data-h]').forEach(x=>{const on=x.dataset.h===S.helper;x.classList.toggle('sel',on);x.setAttribute('aria-pressed',on);});});
+    $('#back2').onclick=()=>{S.teamStep=1;rTeam();};
+    $('#next2').onclick=()=>{if(!S.helper){$('#teamMsg').innerHTML='Please choose a helper. <span class="zh">請選一位小幫手。</span>';return;}S.teamStep=3;sfx('tap');rTeam();window.scrollTo({top:0});};
+  }else{
+    const d=D(),h=H(),best=BEST[d.id+'-'+h.id];
+    stage.innerHTML=`<div class="panel team-panel">
+      ${teamDots(3)}
+      <span class="tape">Step 3 · Your team</span>
+      <div class="spark3">
+        <span class="badge ${best?'':'good'}">${best?'✦✦✦ Perfect spark!':'✦ Nice spark'}</span>
+        <div class="team">Team ${esc(d.teamWord)} ${esc(h.teamWord)}</div>
+        <p class="sline">${best?best[0]:`A ${d.traits[0]} designer and ${h.kind} who is ${h.pers}.`} ${best?`<span class="zh">${best[1]}</span>`:''}</p>
+        <div class="duo3">
+          <div class="who3"><svg viewBox="0 0 120 140">${strip(designerSVG(d))}</svg><div class="bub3"><b>${esc(nm())}</b>“${esc(d.lines.hello[0])}”</div></div>
+          <div class="who3"><svg viewBox="0 0 100 100">${strip(helperSVG(h))}</svg><div class="bub3"><b>${h.name}</b>“${esc(fillName(h.lines.hello[0]))}”</div></div>
+        </div>
+        ${best?'<p class="bonus">Perfect match: +5 spark <span class="zh">完美組合：火花值 +5</span></p>':''}
+      </div>
+      <div class="row mt team-nav" style="justify-content:center"><button class="btn alt" id="back3">Back</button><button class="btn" id="teamGo">Enter the lab</button></div>
+    </div>`;
+    $('#back3').onclick=()=>{S.teamStep=2;rTeam();};
+    $('#teamGo').onclick=()=>{S.spark=best?5:0;setupDock();sfx('win');go('id-learn');react('hello');};
+  }
+}
+
+/* ---- Level 1 ---- */
+function rLearn(){
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 1 · Identify</span>
+    <h1 class="title-l">Meet the three metals</h1>
+    <p class="lead">Tap each sample. Learn how it looks and where you can find it. <span class="zh">點每個樣本，看看它長什麼樣子、生活中哪裡找得到。</span></p>
+    <div class="grid3" id="samples">${MK.map(k=>`
+      <button type="button" class="sample ${S.l1.open===k?'sel':''}" data-k="${k}">${S.l1.seen.has(k)?'<span class="tick" aria-label="seen">✓</span>':''}${cubeSVG(k)}<b>${METALS[k].name}</b><span class="zh">${METALS[k].zh}</span></button>`).join('')}</div>
+    <div id="infoBox" class="mt"></div>
+    <div class="row mt"><button class="btn" id="toQuiz" ${S.l1.seen.size<3?'disabled':''}>${S.l1.seen.size<3?`Open ${3-S.l1.seen.size} more sample${3-S.l1.seen.size>1?'s':''}`:'Start the ID check'}</button></div>
+  </div>`;
+  stage.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{S.l1.seen.add(b.dataset.k);S.l1.open=b.dataset.k;sfx('tap');rLearn();
+    talk(`So this is ${METALS[b.dataset.k].name.toLowerCase()}!`,null);});
+  if(S.l1.open){const m=METALS[S.l1.open];
+    $('#infoBox').innerHTML=`<div class="info"><div>${cubeSVG(S.l1.open)}</div><div>
+      <h2 class="title-l">${m.name} ${spk(m.name)} <span class="zh">${m.zh}</span></h2>
+      <p><b>It looks:</b> ${m.look} ${spk(`${m.name} is ${m.look}.`)} <span class="zh">${m.lookZh}</span></p>
+      <p style="margin-bottom:4px"><b>You can find it in:</b></p>
+      <div class="uses">${m.uses.map(u=>`<span class="use">${u[0]} ${u[1]} <span class="zh">${u[2]}</span></span>`).join('')}</div>
+      <div class="fact">💡 ${m.fact} <span class="zh">${m.factZh}</span></div></div></div>`;}
+  $('#toQuiz').onclick=()=>{S.l1.idx=0;go('id-quiz');talk('Time for the ID check!',fillName(pick(H().lines.hello)));};
+}
+function rQuiz(){
+  const i=S.l1.idx,q=ID_QUIZ[i];
+  const vis=q.vis.startsWith('sample:')?cubeSVG(q.vis.split(':')[1],'Mystery sample'):`<span aria-hidden="true">${q.vis}</span>`;
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 1 · ID check</span>
+    <div class="qcount">Question ${i+1} of ${ID_QUIZ.length}</div>
+    <div class="prompt"><div class="vis">${vis}</div><div><div class="q">${esc(q.q)}</div><span class="zh">${q.zh}</span></div></div>
+    <div class="opts" id="opts"></div><div id="fb"></div>
+  </div>`;
+  ask($('#opts'),shuffle(MK).map(metalOpt),q.a,()=>{
+    $('#fb').innerHTML=`<div class="feedback"><b>✓ ${METALS[q.a].name}!</b> ${q.why}</div><div class="row mt"><button class="btn" id="nx">${i<ID_QUIZ.length-1?'Next question':'Finish Level 1'}</button></div>`;
+    $('#nx').onclick=()=>{S.l1.idx++;S.l1.idx<ID_QUIZ.length?rQuiz():go('id-done');};
+    $('#nx').focus();
+  });
+}
+function rIdDone(){
+  react('done');sfx('win');
+  stage.innerHTML=`<div class="panel" style="text-align:center">
+    <span class="tape">Level 1 clear</span>
+    <h1 class="title-xl">You can identify all three metals!</h1>
+    <div class="row" style="justify-content:center;gap:24px;margin:10px 0 18px">${MK.map(k=>`<div>${cubeSVG(k).replace('<svg','<svg width="84" height="84"')}<div><b>${METALS[k].name}</b></div></div>`).join('')}</div>
+    <p class="lead" style="margin:0 auto 18px">Next, you will test what each metal can do — and learn the adjectives engineers use. <span class="zh">接下來做實驗，學會描述特性的形容詞。</span></p>
+    <button class="btn" id="go2">Go to the testing lab</button></div>`;
+  $('#go2').onclick=()=>{S.l2={st:0,ran:new Set(),step:0};go('lab');talk('Lab coats on. Let’s test!',fillName(pick(H().lines.hello)));};
+}
+
+/* ---- Level 2 ---- */
+function shelfHTML(selectable,selected){
+  return `<div class="shelf">${ADJ_ORDER.map(a=>{const have=S.adjs.has(a),m=ADJ_META[a];
+    const cls=`adj ${have?'':'locked'} ${selected&&selected.has(a)?'on':''}`;
+    const inner=`<span class="m" style="background:${METALS[m[1]].dot}"></span>${have?a:'???'} ${have?`<span class="zh">${m[0]}</span>`:''}`;
+    return selectable&&have?`<button type="button" class="${cls}" data-adj="${a}" aria-pressed="${!!(selected&&selected.has(a))}">${inner}</button>`:`<span class="${cls}">${inner}${have?spk(a):''}</span>`;}).join('')}</div>`;
+}
+function rLab(){
+  const st=STATIONS[S.l2.st],L=S.l2;
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 2 · Station ${L.st+1} of 3</span>
+    <h1 class="title-l">${st.icon} ${st.title} <span class="zh">${st.zh}</span></h1>
+    <p class="lead">${st.q} <span class="zh">${st.qZh}</span></p>
+    <div class="rig">${MK.map(k=>`<div class="slot">${cubeSVG(k).replace('<svg','<svg class="mini"')}<b>${METALS[k].name}</b>
+      ${L.ran.has(k)?`${resultSVG(st,k,st.results[k])}<span class="val">${st.label(st.results[k])}</span>`:`<button class="btn" data-run="${k}">Run test</button>`}</div>`).join('')}</div>
+    ${st.id==='scale'?'<p style="margin-top:8px;font-size:14px;color:var(--ink-soft)">Each cube is 1 cm³. <span class="zh">每個方塊都是 1 立方公分。</span></p>':''}
+    ${st.id==='press'?'<p style="margin-top:8px;font-size:14px;color:var(--ink-soft)">These numbers are simplified for class. <span class="zh">數字為教學用的示意值。</span></p>':''}
+    <div id="report" class="report"></div>
+  </div>
+  <div class="panel"><b class="field-label">My adjective collection</b>${shelfHTML(false)}</div>`;
+  stage.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{L.ran.add(b.dataset.run);sfx('tap');rLab();
+    if(L.ran.size===3)talk('All results are in. What do they tell us?',null);});
+  if(L.ran.size===3)drawReport();
+}
+function drawReport(){
+  const st=STATIONS[S.l2.st],L=S.l2,box=$('#report');
+  const mWord=L.step>0?METALS[st.winner].name:'______',aWord=L.step>1?st.main.a:'______';
+  box.innerHTML=`<h2 class="title-l">📋 Lab report</h2>
+    <div class="report-line"><span class="blank">${mWord}</span> is very <span class="blank">${aWord}</span>. ${L.step>1?spk(`${METALS[st.winner].name} is very ${st.main.a}.`):''}</div>
+    <div id="rq"></div><div id="rfb"></div>`;
+  const rq=$('#rq'),rfb=$('#rfb');
+  if(L.step===0){
+    rq.innerHTML=`<p class="form-q">Which metal won this test? <span class="zh">哪一種金屬贏了這個測試？</span></p><div class="opts" id="o"></div>`;
+    ask($('#o'),MK.map(metalOpt),st.winner,()=>{L.step=1;setTimeout(drawReport,450);});
+  }else if(L.step===1){
+    rq.innerHTML=`<p class="form-q">Turn the word into an adjective: <b>${st.main.from}</b>${st.main.pos?` (${st.main.pos})`:''} → <b>?</b> (adj.) <span class="zh">${st.main.fromZh} → 形容詞</span></p><div class="opts" id="o"></div>`;
+    ask($('#o'),shuffle(st.main.opts).map(w=>({v:w,html:`<span>${w}</span>`})),st.main.a,()=>{
+      S.adjs.add(st.main.a);L.step=2;setTimeout(()=>{drawReport();},450);});
+  }else if(L.step===2){
+    rfb.innerHTML=`<div class="feedback">✓ <b>${st.main.a}</b> <span class="zh">${st.main.zh}</span> — ${st.main.why}</div>`;
+    rq.innerHTML=`<p class="form-q mt">Bonus word! <b>${st.bonus.from}</b> (${st.bonus.pos}) → <b>?</b> (adj.) <span class="zh">${st.bonus.fromZh} → 形容詞</span></p><div class="opts" id="o"></div>`;
+    ask($('#o'),shuffle(st.bonus.opts).map(w=>({v:w,html:`<span>${w}</span>`})),st.bonus.a,()=>{
+      S.adjs.add(st.bonus.a);L.step=3;setTimeout(drawReport,450);});
+  }else{
+    rfb.innerHTML=`<div class="feedback">✓ <b>${st.main.a}</b> <span class="zh">${st.main.zh}</span> — ${st.main.why}</div>
+      <div class="feedback">✓ <b>${st.bonus.a}</b> <span class="zh">${st.bonus.zh}</span> — ${st.bonus.why} ${spk(`${METALS[st.winner].name} is ${st.bonus.a}.`)}</div>
+      <div class="row mt"><button class="btn" id="nx">${S.l2.st<2?'Next station':'Finish Level 2'}</button></div>`;
+    stage.querySelectorAll('.shelf')[0].outerHTML=shelfHTML(false);
+    $('#nx').onclick=()=>{if(S.l2.st<2){S.l2={st:S.l2.st+1,ran:new Set(),step:0};rLab();window.scrollTo({top:0});talk('Next station!',null);}else go('lab-done');};
+  }
+}
+function rLabDone(){
+  react('done');sfx('win');
+  stage.innerHTML=`<div class="panel" style="text-align:center">
+    <span class="tape">Level 2 clear</span>
+    <h1 class="title-xl">Six adjectives collected!</h1>
+    <div style="display:flex;justify-content:center;margin:12px 0 18px">${shelfHTML(false)}</div>
+    <p class="lead" style="margin:0 auto 18px">Three clients are waiting in the design studio. Use your adjectives to explain your choices. <span class="zh">三位客戶在等你！用學到的形容詞說明你的選擇。</span></p>
+    <button class="btn" id="go3">Open the design studio</button></div>`;
+  $('#go3').onclick=()=>{go('orders');talk('Our first clients! Let’s read their orders.',fillName(pick(H().lines.hello)));};
+}
+
+/* ---- Level 3 ---- */
+function rOrders(){
+  const L=S.l3,done=PRODUCTS.filter(p=>L.solved[p.id]).length;
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 3 · Client orders</span>
+    <h1 class="title-l">Choose the right metal for each client</h1>
+    <p class="lead">Open an order. Pick the metal, then pick the two adjectives that explain why. <span class="zh">打開訂單：選金屬，再選兩個能說明原因的形容詞。</span></p>
+    <div class="grid3" id="tk">${PRODUCTS.map(p=>`<button type="button" class="ticket ${L.active===p.id?'sel':''}" data-p="${p.id}">${L.solved[p.id]?'<span class="stamp">Approved ✓</span>':''}<span class="cl" aria-hidden="true">${p.client}</span><span><b>${p.title}</b><small>${p.clientName}</small></span></button>`).join('')}</div>
+    <div id="work" class="mt"></div>
+    ${done===3?`<div class="feedback mt"><b>All three orders approved!</b> Now choose one product to style and present. <span class="zh">三張訂單都完成了！選一個產品來設計外觀並發表。</span></div><div class="row mt"><button class="btn" id="toCustom">Style my product</button></div>`:''}
+  </div>
+  <div class="panel"><b class="field-label">My adjective collection</b>${shelfHTML(false)}</div>`;
+  stage.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{L.active=b.dataset.p;sfx('tap');rOrders();$('#work').scrollIntoView({behavior:'smooth',block:'start'});});
+  if($('#toCustom'))$('#toCustom').onclick=()=>{L.product=L.product||PRODUCTS[0].id;go('custom');talk('Time to make it look amazing!',null);};
+  if(L.active)drawWork();
+}
+function drawWork(){
+  const p=PRODUCTS.find(x=>x.id===S.l3.active),w=$('#work');
+  if(S.l3.solved[p.id]){
+    w.innerHTML=`<div class="brief">${p.brief}</div><div class="feedback"><b>Approved:</b> ${METALS[p.material].name}, because it is <b>${p.adjs[0]}</b> and <b>${p.adjs[1]}</b>. ${spk(`We chose ${METALS[p.material].name.toLowerCase()} because it is ${p.adjs[0]} and ${p.adjs[1]}.`)}</div>`;return;}
+  w.innerHTML=`<div class="brief">${p.client} ${p.brief}<br><span class="zh">${p.briefZh}</span></div>
+    <b class="field-label">A · Which metal should we use?</b><div class="opts" id="mo"></div>
+    <div id="adjPart"></div>`;
+  ask($('#mo'),MK.map(metalOpt),p.material,()=>{
+    const sel=new Set();
+    const draw=()=>{
+      $('#adjPart').innerHTML=`<b class="field-label">B · Pick two adjectives that explain why <span class="zh">選兩個形容詞說明原因</span></b>
+      <div id="as">${shelfHTML(true,sel)}</div><div class="row mt"><button class="btn" id="chk" ${sel.size!==2?'disabled':''}>Check my design</button><span style="font-size:14px;color:var(--ink-soft)">Selected: ${sel.size}/2</span> <span class="zh">已選 ${sel.size}/2</span></div><div id="afb"></div>`;
+      $('#adjPart').querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{const a=b.dataset.adj;
+        if(sel.has(a))sel.delete(a);else if(sel.size<2)sel.add(a);sfx('tap');draw();});
+      $('#chk').onclick=()=>{
+        const ok=[...sel].every(a=>p.adjs.includes(a));
+        if(ok){S.l3.solved[p.id]=true;addSpark(adjMiss?2:5);sfx('win');react('correct');rOrders();
+          $('#work').scrollIntoView({behavior:'smooth',block:'start'});}
+        else{adjMiss=true;sfx('no');react('wrong');
+          const bad=[...sel].filter(a=>!p.adjs.includes(a));
+          $('#afb').innerHTML=`<div class="feedback bad"><b>Not quite.</b> “${bad.join('” and “')}” ${bad.length>1?'are':'is'} true for some metals, but ${bad.length>1?'they don’t':'it doesn’t'} answer what ${p.clientName.split(',')[0]} needs. Read the order again. <span class="zh">再讀一次客戶的需求。</span></div>`;}
+      };
+    };
+    let adjMiss=false;
+    setHint(()=>{talk(pick(D().lines.think),`Look for the key words in the order… “${p.brief.match(/(fast|bends|light|shape|hard to break|lasts)/g).join('”, “')}”.`);sfx('tap');});
+    draw();
+  });
+}
+function rCustom(){
+  const L=S.l3,p=PRODUCTS.find(x=>x.id===L.product),d=D();
+  const pats=[...PATTERNS,[d.special,SPECIAL_PAT[d.special]]];
+  if(!pats.some(x=>x[0]===L.pattern))L.pattern='striped';
+  const hex=COLORS.find(c=>c[0]===L.color)[1];
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 3 · Style studio</span>
+    <h1 class="title-l">Make it yours</h1>
+    <p class="lead">Choose one product, give it a name, then pick a color and a pattern. <span class="zh">選一個產品、取名字，再選顏色和花樣。</span></p>
+    <div class="studio">
+      <div class="preview"><div id="pv">${productSVG(p.id,hex,L.pattern)}</div>
+        <div class="pname" id="pvName">${esc(L.pname||'Name me!')}</div>
+        <div style="font-size:14px;color:var(--ink-soft)">${p.title} · made of ${METALS[p.material].name.toLowerCase()}</div></div>
+      <div>
+        <span class="field-label">Product</span>
+        <div class="opts" id="prodPick" style="grid-template-columns:repeat(3,1fr)">${PRODUCTS.map(x=>`<button type="button" class="opt ${x.id===p.id?'right':''}" data-prod="${x.id}" style="padding:8px"><span style="font-size:15px">${x.title}</span></button>`).join('')}</div>
+        <label class="field-label" for="pn">Product name</label>
+        <input class="name-in" id="pn" maxlength="18" placeholder="e.g. Power Snake" value="${esc(L.pname)}" autocomplete="off">
+        <span class="field-label">Color</span>
+        <div class="swatches" style="padding-bottom:18px">${COLORS.map(c=>`<button type="button" class="sw ${c[0]===L.color?'sel':''}" data-c="${c[0]}" style="background:${c[1]}" aria-label="${c[0]}" aria-pressed="${c[0]===L.color}"><span>${c[0]}</span></button>`).join('')}</div>
+        <span class="field-label">Pattern</span>
+        <div class="pats">${pats.map(([id,label])=>`<button type="button" class="pat ${id===L.pattern?'sel':''}" data-pat="${id}" aria-pressed="${id===L.pattern}">${id===d.special?'<span class="star">✦ yours</span>':''}<svg viewBox="0 0 80 38" aria-hidden="true"><defs>${patternDef(id,'sp'+id,patInk(hex))}</defs><rect width="80" height="38" fill="${hex}"/><rect width="80" height="38" fill="url(#sp${id})"/></svg>${label}</button>`).join('')}</div>
+        <p style="margin-top:8px;font-size:14px;color:var(--ink-soft)">✦ is a special pattern for ${d.title}. <span class="zh">✦ 是你的設計師（${d.zh}）專屬花樣。</span></p>
+      </div>
+    </div>
+    <div class="row mt"><button class="btn" id="toWrite">Write my pitch</button><span id="cfb" style="font-size:14px;color:var(--bad)"></span></div>
+  </div>`;
+  const repaint=()=>{const h2=COLORS.find(c=>c[0]===L.color)[1];$('#pv').innerHTML=productSVG(L.product,h2,L.pattern);};
+  stage.querySelectorAll('[data-prod]').forEach(b=>b.onclick=()=>{L.product=b.dataset.prod;sfx('tap');rCustom();});
+  $('#pn').oninput=e=>{L.pname=e.target.value;$('#pvName').textContent=L.pname||'Name me!';};
+  stage.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{L.color=b.dataset.c;sfx('tap');rCustom();
+    if(d.id==='stylist')talk(pick(['Ooh, '+L.color+' is so in this season!','Love this '+L.color+'!']),null);});
+  stage.querySelectorAll('[data-pat]').forEach(b=>b.onclick=()=>{L.pattern=b.dataset.pat;sfx('tap');
+    stage.querySelectorAll('[data-pat]').forEach(x=>{x.classList.toggle('sel',x===b);x.setAttribute('aria-pressed',x===b);});repaint();
+    if(L.pattern===d.special)talk('That’s my signature pattern!',pick(H().lines.correct));});
+  $('#toWrite').onclick=()=>{if(!L.pname.trim()){$('#pn').focus();$('#cfb').innerHTML='Please give your product a name first. <span class="zh">請先幫產品取個英文名字。</span>';return;}S.slots={};go('write');talk('Now let’s explain our design in English.',null);};
+}
+
+/* sentence scaffold */
+function frameDefs(){
+  const L=S.l3,p=PRODUCTS.find(x=>x.id===L.product),m=p.material,mAcc=m==='aluminum'?['aluminum','aluminium']:[m];
+  const patWord=L.pattern;
+  const A=a=>v=>a.includes(norm(v));
+  const FREE=v=>norm(v).split(' ').filter(Boolean).length>=2;
+  const ADJ=v=>p.adjs.includes(norm(v));
+  return {p,frames:[
+    ['Our product is a ',{k:'type',ph:'product type',t:A(p.accept)},' called the ',{k:'pname',ph:'product name',t:v=>norm(v)===norm(L.pname)},'. It is designed to ',{k:'purpose',ph:'what it does',t:FREE,free:1},'.'],
+    ['To work well, it needs a material that is ',{k:'adjA',ph:'adjective',t:ADJ},' and ',{k:'adjB',ph:'adjective',t:ADJ},'.'],
+    ['We decided to use ',{k:'mat1',ph:'material',t:A(mAcc)},' because it is ',{k:'adjC',ph:'adjective',t:ADJ},'.'],
+    ['One important property of ',{k:'mat2',ph:'material',t:A(mAcc)},' is that it is ',{k:'adjD',ph:'adjective',t:ADJ},', which helps the product ',{k:'benefit',ph:'do what?',t:FREE,free:1},'.'],
+    ['We chose a ',{k:'color',ph:'color',t:A([L.color])},' color with a ',{k:'pattern',ph:'pattern',t:A([patWord,patWord.replace('-',' '),patWord.replace('-','')])},' pattern because ',{k:'why',ph:'your reason',t:FREE,free:1},'.'],
+    ['We believe ',{k:'mat3',ph:'material',t:A(mAcc)},' is a good choice because its properties meet the needs of our product.']
+  ]};
+}
+function rWrite(){
+  const L=S.l3,{p,frames}=frameDefs();
+  stage.innerHTML=`<div class="panel">
+    <span class="tape">Level 3 · Sentence scaffold</span>
+    <h1 class="title-l">Write your design pitch</h1>
+    <p class="lead">Fill in every blank with your own product information. Type the words yourself — then copy the six sentences into your notebook for your speaking presentation. <span class="zh">把自己的產品資訊填進空格（請自己打字），完成後抄到筆記本，準備口說發表。</span></p>
+    <div class="bank" aria-label="Word bank">
+      <span class="item"><span class="k">product type</span>${p.name}</span>
+      <span class="item"><span class="k">product name</span>${esc(L.pname)}</span>
+      <span class="item"><span class="k">material</span>${p.material}</span>
+      <span class="item"><span class="k">adjectives</span>${p.adjs.join(', ')}</span>
+      <span class="item"><span class="k">color</span>${L.color}</span>
+      <span class="item"><span class="k">pattern</span>${L.pattern}</span>
+      <span class="item"><span class="k">idea: what it does</span>${p.purpose}</span>
+      <span class="item"><span class="k">idea: how it helps</span>${p.benefit}</span>
+    </div>
+    <ol class="frames mt">${frames.map(f=>`<li><div>${f.map(seg=>typeof seg==='string'?esc(seg):`<input class="slotin" data-k="${seg.k}" placeholder="${seg.ph}" aria-label="${seg.ph}" value="${esc(S.slots[seg.k]||'')}" size="${Math.max(seg.ph.length,(S.slots[seg.k]||'').length)+1}" autocomplete="off" autocapitalize="off" spellcheck="false">`).join('')}</div></li>`).join('')}</ol>
+    <div id="wfb"></div>
+    <div class="row mt"><button class="btn" id="chkW">Check my sentences</button><button class="btn alt" id="backC">Back to styling</button></div>
+  </div>`;
+  const all=frames.flat().filter(s=>typeof s!=='string');
+  stage.querySelectorAll('.slotin').forEach(inp=>{inp.oninput=()=>{S.slots[inp.dataset.k]=inp.value;inp.size=Math.max(inp.placeholder.length,inp.value.length)+1;inp.classList.remove('ok','no');};});
+  $('#backC').onclick=()=>go('custom');
+  setHint(()=>{const first=all.find(s=>!s.t(S.slots[s.k]||''));
+    if(!first){talk(null,pick(H().lines.nohint));return;}
+    const inp=stage.querySelector(`[data-k="${first.k}"]`);inp.focus();inp.classList.add('no');
+    talk(pick(D().lines.think),first.free?`Write at least two words for “${first.ph}”. Look at the ideas in the word bank!`:`Check the word bank for the ${first.ph}.`);});
+  $('#chkW').onclick=()=>{
+    let bad=0;
+    all.forEach(s=>{const inp=stage.querySelector(`[data-k="${s.k}"]`),ok=s.t(inp.value);inp.classList.toggle('ok',ok);inp.classList.toggle('no',!ok);if(!ok)bad++;});
+    if(!bad&&norm(S.slots.adjA)===norm(S.slots.adjB)){bad=1;stage.querySelector('[data-k="adjB"]').classList.replace('ok','no');}
+    if(bad){sfx('no');react('wrong');$('#wfb').innerHTML=`<div class="feedback bad"><b>${bad} blank${bad>1?'s':''} to fix.</b> Red blanks need a word from the word bank. Blanks for ideas need at least two words. In sentence 2, use two different adjectives. <span class="zh">紅色的空格要再修改。</span></div>`;return;}
+    S.sentences=frames.map(f=>f.map(seg=>typeof seg==='string'?seg:{w:(S.slots[seg.k]||'').trim()}));
+    addSpark(8);sfx('win');react('done');go('final');
+  };
+}
+const sentText=s=>s.map(x=>typeof x==='string'?x:x.w).join('').replace(/^./,c=>c.toUpperCase());
+
+function rFinal(){
+  const L=S.l3,p=PRODUCTS.find(x=>x.id===L.product),d=D(),h=H(),hex=COLORS.find(c=>c[0]===L.color)[1];
+  const team=`Team ${d.teamWord} ${h.teamWord}`;
+  stage.innerHTML=`
+  <div class="panel" style="text-align:center"><span class="tape">Mission complete</span><h1 class="title-xl">Your design card is ready!</h1>
+  <p class="lead" style="margin:0 auto">Copy your six sentences into your notebook. You will use them in your speaking presentation. <span class="zh">把六個句子抄進筆記本，口說發表時要用！</span></p></div>
+  <article class="final" id="card">
+    <div class="final-head"><div class="duo">${designerSVG(d)}${helperSVG(h)}</div>
+      <div><h2>${esc(L.pname)}</h2><small>Designed by ${esc(nm())} (${d.title}) & ${h.name} · ${esc(team)}</small></div>
+      <div style="margin-left:auto;text-align:right"><b style="font-family:var(--font-display);font-size:20px">✦ ${S.spark}</b><small>${sparkTitle()}</small></div></div>
+    <div class="final-body">
+      <div class="pv">${productSVG(p.id,hex,L.pattern)}</div>
+      <div>
+        <dl class="facts"><dt>Product</dt><dd>${p.title}</dd><dt>Client</dt><dd>${p.clientName}</dd><dt>Material</dt><dd>${METALS[p.material].name} <span class="zh">${METALS[p.material].zh}</span></dd><dt>Because it is</dt><dd>${p.adjs.join(' + ')}</dd><dt>Style</dt><dd>${L.color}, ${L.pattern} pattern</dd></dl>
+        <h3 style="font-size:20px;margin-bottom:8px">My pitch ${spk(S.sentences.map(sentText).join(' '))}</h3>
+        <ol class="pitch">${S.sentences.map(s=>`<li>${s.map((x,i)=>typeof x==='string'?esc(i===0?x:x):`<em>${esc(x.w)}</em>`).join('')} ${spk(sentText(s))}</li>`).join('')}</ol>
+        <p class="copy-note">✍️ Copy these sentences into your notebook. Practice saying them aloud: speak clearly and look at your audience. <span class="zh">練習大聲說出來：咬字清楚、看著聽眾。</span></p>
+      </div>
+    </div>
+  </article>
+  <div class="row mt" style="justify-content:center">
+    <button class="btn" id="png">Save card as picture</button>
+    <button class="btn" id="txt">Download sentences (.txt)</button>
+    <button class="btn alt" id="copy">Copy sentences</button>
+    <button class="btn alt" id="again">Style another product</button>
+  </div>
+  <p id="fstat" style="text-align:center;font-size:14px;color:var(--ink-soft);margin-top:10px"></p>`;
+  talk(`We did it! The ${L.pname} is ready.`,pick(H().lines.done));
+  $('#again').onclick=()=>{S.slots={};go('custom');};
+  $('#copy').onclick=async()=>{const txt=S.sentences.map((s,i)=>`${i+1}. ${sentText(s)}`).join('\n');
+    try{await navigator.clipboard.writeText(txt);$('#fstat').textContent='Copied! Paste them anywhere you like.';}
+    catch(e){$('#fstat').textContent='Copy is blocked here — please write the sentences in your notebook.';}};
+  $('#png').onclick=makePNG;
+  $('#txt').onclick=saveText;
+}
+
+/* ================= PNG CARD ================= */
+function pitchText(){
+  const L=S.l3,d=D(),h=H();
+  return `Metal Lab · My design pitch\n\nProduct name: ${L.pname}\nDesigner: ${nm()} (${d.title}) & ${h.name}\n\n`+S.sentences.map((s,i)=>`${i+1}. ${sentText(s)}`).join('\n')+'\n';
+}
+async function saveText(){
+  const txt=pitchText(),st=$('#fstat');
+  if(dl){try{await dl.save({filename:`Metal-Lab-${(S.l3.pname||'design').replace(/[^\w-]+/g,'-')}-pitch.txt`,data:new Blob([txt],{type:'text/plain'})});st.textContent='Saved!';return;}
+    catch(e){if(e&&e.code==='declined'){st.textContent='Not saved.';return;}}}
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="box" role="dialog" aria-label="Your pitch text"><h3 style="margin-bottom:8px">Your pitch</h3><textarea readonly style="width:100%;height:46vh;font:inherit;font-size:15px;padding:10px;border-radius:12px;border:2px solid var(--line);background:var(--paper-2);color:var(--ink)">${esc(txt)}</textarea><p style="font-size:14px;color:var(--ink-soft);margin:8px 0">If downloading doesn’t work, select the text and copy it, or take a screenshot.</p><div class="row" style="justify-content:center"><a class="btn" style="text-decoration:none" href="data:text/plain;charset=utf-8,${encodeURIComponent(txt)}" download="Metal-Lab-${(S.l3.pname||'design').replace(/[^\w-]+/g,'-')}-pitch.txt">Download .txt</a><button class="btn alt" id="tSel">Select all</button><button class="btn alt" id="tClose">Close</button></div></div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  m.querySelector('#tClose').onclick=()=>m.remove();
+  m.querySelector('#tSel').onclick=()=>{const t=m.querySelector('textarea');t.focus();t.select();t.setSelectionRange(0,t.value.length);};
+}
+function svgImg(svg){return new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});}
+function rr(c,x,y,w,h,r,fill,stroke){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=4;c.stroke();}}
+function wrap(c,txt,x,y,maxW,lh){const words=txt.split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(c.measureText(t).width>maxW&&line){c.fillText(line,x,y);y+=lh;line=w;}else line=t;}if(line){c.fillText(line,x,y);y+=lh;}return y;}
+async function makePNG(){
+  const st=$('#fstat');st.textContent='Making your picture…';
+  const c0=document.createElement('canvas').getContext('2d');
+  try{await document.fonts.ready;}catch(e){}
+  const L=S.l3,p=PRODUCTS.find(x=>x.id===L.product),d=D(),h=H(),hex=COLORS.find(c=>c[0]===L.color)[1];
+  c0.font='400 29px "Atkinson Hyperlegible", sans-serif';
+  let est=0;S.sentences.forEach(s=>{let line='',n=1;for(const w of sentText(s).split(' ')){const t=line?line+' '+w:w;if(c0.measureText(t).width>840&&line){n++;line=w;}else line=t;}est+=n*40+18;});
+  const W=1080,Hh=Math.max(1100,815+est+120),cv=document.createElement('canvas');cv.width=W;cv.height=Hh;const c=cv.getContext('2d');
+  c.fillStyle='#E4F4F0';c.fillRect(0,0,W,Hh);c.strokeStyle='#CFE8E2';c.lineWidth=2;
+  for(let x=0;x<W;x+=40){c.beginPath();c.moveTo(x,0);c.lineTo(x,Hh);c.stroke();}for(let y=0;y<Hh;y+=40){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();}
+  rr(c,40,40,W-80,Hh-80,40,'#FFFFFF','#17414A');
+  rr(c,40,40,W-80,170,40,'#17414A');c.fillStyle='#17414A';c.fillRect(40,150,W-80,60);
+  const [pi,di,hi]=await Promise.all([svgImg(productSVG(p.id,hex,L.pattern)),svgImg(designerSVG(d)),svgImg(helperSVG(h))]);
+  c.fillStyle='#FFFFFF';c.beginPath();c.arc(130,125,56,0,7);c.fill();c.beginPath();c.arc(210,125,56,0,7);c.fill();
+  if(di)c.drawImage(di,84,72,92,107);if(hi)c.drawImage(hi,162,77,96,96);
+  c.fillStyle='#FFFFFF';c.font='700 54px Fredoka, sans-serif';c.fillText(L.pname,290,122);
+  c.fillStyle='#FFC93C';c.font='500 26px Fredoka, sans-serif';c.fillText(`by ${nm()} & ${h.name} · Team ${d.teamWord} ${h.teamWord}`,290,165);
+  rr(c,80,250,400,380,30,'#E4F4F0');if(pi)c.drawImage(pi,100,280,360,330);
+  c.fillStyle='#4E6E74';c.font='700 24px "Atkinson Hyperlegible", sans-serif';
+  const facts=[['Product',p.title],['Client',p.clientName],['Material',METALS[p.material].name],['Because it is',p.adjs.join(' + ')],['Style',`${L.color}, ${L.pattern} pattern`],['Team spark',`${S.spark} · ${sparkTitle()}`]];
+  let fy=290;facts.forEach(([k,v])=>{c.fillStyle='#4E6E74';c.font='400 22px "Atkinson Hyperlegible", sans-serif';c.fillText(k,520,fy);c.fillStyle='#17414A';c.font='700 28px "Atkinson Hyperlegible", sans-serif';c.fillText(v,520,fy+34);fy+=64;});
+  c.fillStyle='#FFC93C';rr(c,80,700,240,50,10,'#FFC93C');c.fillStyle='#3B2A05';c.font='600 28px Fredoka, sans-serif';c.fillText('My pitch',104,735);
+  let y=815;c.font='400 29px "Atkinson Hyperlegible", sans-serif';c.fillStyle='#17414A';
+  S.sentences.forEach((s,i)=>{c.fillStyle='#17414A';c.beginPath();c.arc(102,y-10,20,0,7);c.fill();c.fillStyle='#fff';c.font='700 22px "Atkinson Hyperlegible", sans-serif';c.fillText(String(i+1),95,y-2);
+    c.fillStyle='#17414A';c.font='400 29px "Atkinson Hyperlegible", sans-serif';y=wrap(c,sentText(s),140,y,W-240,40)+18;});
+  c.fillStyle='#4E6E74';c.font='400 22px "Atkinson Hyperlegible", sans-serif';c.fillText('Metal Lab · Design Studio',80,Hh-80);
+  const url=cv.toDataURL('image/png');
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="box" role="dialog" aria-label="Your design card picture"><img src="${url}" alt="Design card for ${esc(L.pname)}"><p style="font-size:14px;color:var(--ink-soft);margin:10px 0">${dl?'Tap Save to keep this picture.':'Tap Download picture. If nothing happens, long-press (phone) or right-click (computer) the picture to save it.'}</p><div class="row" style="justify-content:center">${dl?'<button class="btn" id="mSave">Save</button>':`<a class="btn" style="text-decoration:none" href="${url}" download="Metal-Lab-${(L.pname||'design').replace(/[^\w-]+/g,'-')}.png">Download picture</a>`}<button class="btn alt" id="mClose">Close</button></div><p id="mStat" style="font-size:13px;margin:8px 0 0"></p></div>`;
+  document.body.appendChild(m);st.textContent='';
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  $('#mClose').onclick=()=>m.remove();
+  if(dl)$('#mSave').onclick=async()=>{
+    try{const blob=await (await fetch(url)).blob();
+      await dl.save({filename:`Metal-Lab-${(L.pname||'design').replace(/[^\w-]+/g,'-')}.png`,data:blob});$('#mStat').textContent='Saved!';}
+    catch(e){$('#mStat').textContent=e&&e.code==='declined'?'Not saved.':'Saving isn’t available here. Long-press or right-click the picture instead.';}
+  };
+}
+
+/* ================= TOOLS ================= */
+$('#zhBtn').onclick=e=>{const on=document.documentElement.classList.toggle('no-zh');e.currentTarget.setAttribute('aria-pressed',String(!on));};
+$('#sndBtn').onclick=e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'🔊 Sound':'🔇 Sound';e.currentTarget.setAttribute('aria-pressed',String(soundOn));};
+let armed=null;
+$('#resetBtn').onclick=e=>{const b=e.currentTarget;
+  if(S.screen!=='title'&&!armed){b.textContent='Tap again to restart';armed=setTimeout(()=>{armed=null;b.textContent='↺ Restart';},3000);return;}
+  clearTimeout(armed);armed=null;b.textContent='↺ Restart';S=fresh();go('title');};
+go('title');
+})();
+</script>
+</body>
+</html>
